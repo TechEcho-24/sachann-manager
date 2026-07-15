@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ReceiptUpload } from "@/components/expenses/ReceiptUpload";
+import { ReceiptUpload, type ExistingReceipt } from "@/components/expenses/ReceiptUpload";
 import { EXPENSE_CATEGORIES, PAYERS } from "@/lib/constants";
 import { cn, formatDateForInput } from "@/lib/utils";
 import { createExpense, updateExpense, type SerializedExpense } from "@/actions/expense";
-import { Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 interface ExpenseFormProps {
@@ -23,15 +23,66 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [showDetails, setShowDetails] = useState(
-    !!(expense?.vendor || expense?.invoiceNumber || expense?.description)
+    !!(
+      expense?.vendor ||
+      expense?.invoiceNumber ||
+      expense?.description ||
+      expense?.location
+    )
   );
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [removeReceipt, setRemoveReceipt] = useState(false);
+
+  const [receipts, setReceipts] = useState<File[]>([]);
+  const [existingReceipts, setExistingReceipts] = useState<ExistingReceipt[]>(
+    expense?.receipts || []
+  );
+
   const [selectedCategory, setSelectedCategory] = useState(expense?.category || "");
   const [selectedPayer, setSelectedPayer] = useState(expense?.paidBy || "");
   const [dateMode, setDateMode] = useState<"current" | "custom">(
     expense ? "custom" : "current"
   );
+
+  // Location State
+  const initialLoc = expense?.location;
+  const [locationType, setLocationType] = useState<"auto" | "manual">(
+    initialLoc?.type || "auto"
+  );
+  const [areaName, setAreaName] = useState(initialLoc?.areaName || "");
+  const [mapLink, setMapLink] = useState(initialLoc?.mapLink || "");
+  const [lat, setLat] = useState<number | undefined>(initialLoc?.lat);
+  const [lng, setLng] = useState<number | undefined>(initialLoc?.lng);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        setLat(latitude);
+        setLng(longitude);
+        setMapLink(`https://www.google.com/maps?q=${latitude},${longitude}`);
+        toast.success("Location acquired");
+        setIsLocating(false);
+      },
+      (error) => {
+        console.error("Location error:", error);
+        toast.error("Failed to get location. Please allow location access.");
+        setIsLocating(false);
+      }
+    );
+  };
+
+  const handleRemoveExistingReceipt = (index: number) => {
+    const newExisting = [...existingReceipts];
+    newExisting.splice(index, 1);
+    setExistingReceipts(newExisting);
+  };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -49,12 +100,19 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
     formData.set("category", selectedCategory);
     formData.set("paidBy", selectedPayer);
 
-    // Handle receipt
-    if (receiptFile) {
-      formData.set("receipt", receiptFile);
+    // Handle multiple receipts
+    if (receipts.length > 0) {
+      receipts.forEach((r) => formData.append("receipts", r));
     }
-    if (removeReceipt) {
-      formData.set("removeReceipt", "true");
+    
+    formData.set("existingReceipts", JSON.stringify(existingReceipts));
+
+    // Handle Location
+    if (showDetails) {
+      const locationData = { type: locationType, areaName, mapLink, lat, lng };
+      if (locationData.mapLink || locationData.areaName || locationData.lat) {
+        formData.set("location", JSON.stringify(locationData));
+      }
     }
 
     try {
@@ -204,7 +262,7 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
             type="date"
             defaultValue={
               expense
-                ? formatDateForInput(expense.date)
+                ? formatDateForInput(new Date(expense.date))
                 : formatDateForInput(new Date())
             }
             required
@@ -229,7 +287,89 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
       </button>
 
       {showDetails && (
-        <div className="space-y-4 pl-0 border-l-2 border-border/60 ml-0 rounded-none">
+        <div className="space-y-6 pl-0 border-l-2 border-border/60 ml-0 rounded-none">
+          {/* Location Section */}
+          <div className="space-y-3 pt-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              Location
+            </Label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setLocationType("auto")}
+                className={cn(
+                  "px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-150",
+                  locationType === "auto"
+                    ? "border-brand-green bg-brand-green/10 text-brand-green"
+                    : "border-border bg-card text-muted-foreground"
+                )}
+              >
+                Current Location
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocationType("manual")}
+                className={cn(
+                  "px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-150",
+                  locationType === "manual"
+                    ? "border-brand-green bg-brand-green/10 text-brand-green"
+                    : "border-border bg-card text-muted-foreground"
+                )}
+              >
+                Manual Entry
+              </button>
+            </div>
+
+            {locationType === "auto" ? (
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGetLocation}
+                  disabled={isLocating}
+                  className="rounded-xl"
+                >
+                  {isLocating ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <MapPin className="w-4 h-4 mr-2" />
+                  )}
+                  {lat && lng ? "Update Location" : "Get Current Location"}
+                </Button>
+                {lat && lng && (
+                  <span className="text-xs text-brand-green flex-1">
+                    Location acquired
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="areaName" className="text-xs text-muted-foreground">Area Name</Label>
+                  <Input
+                    id="areaName"
+                    value={areaName}
+                    onChange={(e) => setAreaName(e.target.value)}
+                    placeholder="e.g., Connaught Place"
+                    className="h-10 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mapLink" className="text-xs text-muted-foreground">Map Link</Label>
+                  <Input
+                    id="mapLink"
+                    value={mapLink}
+                    onChange={(e) => setMapLink(e.target.value)}
+                    placeholder="https://maps.google.com/..."
+                    className="h-10 rounded-xl"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Vendor */}
           <div className="space-y-2">
             <Label htmlFor="vendor" className="text-sm font-medium">
               Vendor
@@ -272,23 +412,15 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
         </div>
       )}
 
-      {/* Receipt Upload */}
+      {/* Receipts Upload */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Receipt</Label>
+        <Label className="text-sm font-medium">Receipts</Label>
         <ReceiptUpload
-          onFileSelect={setReceiptFile}
-          currentReceipt={
-            expense?.receipt && !removeReceipt
-              ? { secureUrl: expense.receipt.secureUrl, bytes: expense.receipt.bytes }
-              : null
-          }
-          onRemoveExisting={
-            expense?.receipt
-              ? () => {
-                  setRemoveReceipt(true);
-                }
-              : undefined
-          }
+          files={receipts}
+          onFilesChange={setReceipts}
+          existingReceipts={existingReceipts}
+          onRemoveExisting={handleRemoveExistingReceipt}
+          maxFiles={5}
         />
       </div>
 

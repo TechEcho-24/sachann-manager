@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import connectDB from "@/lib/db";
-import Expense, { type IExpense } from "@/models/Expense";
+import Expense, { type IExpense, type ILocation } from "@/models/Expense";
 import { expenseSchema } from "@/lib/validators";
 import { auth } from "@/lib/auth";
 import { uploadReceiptImage, deleteReceiptImage } from "@/lib/cloudinary";
@@ -37,13 +37,20 @@ export interface SerializedExpense {
   description?: string;
   vendor?: string;
   invoiceNumber?: string;
-  receipt?: {
+  receipts?: {
     publicId: string;
     secureUrl: string;
     width: number;
     height: number;
     format: string;
     bytes: number;
+  }[];
+  location?: {
+    type: "auto" | "manual";
+    areaName?: string;
+    mapLink?: string;
+    lat?: number;
+    lng?: number;
   };
   isArchived: boolean;
   createdAt: string;
@@ -61,14 +68,21 @@ function serializeExpense(expense: IExpense): SerializedExpense {
     description: expense.description,
     vendor: expense.vendor,
     invoiceNumber: expense.invoiceNumber,
-    receipt: expense.receipt
+    receipts: expense.receipts?.map((r) => ({
+      publicId: r.publicId,
+      secureUrl: r.secureUrl,
+      width: r.width,
+      height: r.height,
+      format: r.format,
+      bytes: r.bytes,
+    })) || [],
+    location: expense.location
       ? {
-          publicId: expense.receipt.publicId,
-          secureUrl: expense.receipt.secureUrl,
-          width: expense.receipt.width,
-          height: expense.receipt.height,
-          format: expense.receipt.format,
-          bytes: expense.receipt.bytes,
+          type: expense.location.type,
+          areaName: expense.location.areaName,
+          mapLink: expense.location.mapLink,
+          lat: expense.location.lat,
+          lng: expense.location.lng,
         }
       : undefined,
     isArchived: expense.isArchived,
@@ -107,22 +121,38 @@ export async function createExpense(formData: FormData) {
       date: new Date(result.data.date),
     };
 
-    // Handle receipt upload
-    const receiptFile = formData.get("receipt") as File | null;
-    if (receiptFile && receiptFile.size > 0) {
-      const bytes = await receiptFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const uploadResult = await uploadReceiptImage(buffer, receiptFile.name);
-
-      expenseData.receipt = {
-        publicId: uploadResult.public_id,
-        secureUrl: uploadResult.secure_url,
-        width: uploadResult.width,
-        height: uploadResult.height,
-        format: uploadResult.format,
-        bytes: uploadResult.bytes,
-      };
+    // Handle Location
+    const locationStr = formData.get("location") as string;
+    if (locationStr) {
+      try {
+        expenseData.location = JSON.parse(locationStr);
+      } catch (e) {
+        console.error("Failed to parse location", e);
+      }
     }
+
+    // Handle multiple receipts
+    const receiptFiles = formData.getAll("receipts") as File[];
+    const uploadedReceipts = [];
+
+    for (const file of receiptFiles) {
+      if (file && file.size > 0) {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const uploadResult = await uploadReceiptImage(buffer, file.name);
+
+        uploadedReceipts.push({
+          publicId: uploadResult.public_id,
+          secureUrl: uploadResult.secure_url,
+          width: uploadResult.width,
+          height: uploadResult.height,
+          format: uploadResult.format,
+          bytes: uploadResult.bytes,
+        });
+      }
+    }
+
+    expenseData.receipts = uploadedReceipts;
 
     const expense = await Expense.create(expenseData);
 
@@ -171,41 +201,64 @@ export async function updateExpense(id: string, formData: FormData) {
       date: new Date(result.data.date),
     };
 
-    // Handle receipt
-    const receiptFile = formData.get("receipt") as File | null;
-    const removeReceipt = formData.get("removeReceipt") === "true";
-
-    if (removeReceipt && expense.receipt) {
-      await deleteReceiptImage(expense.receipt.publicId);
-      updateData.receipt = undefined;
-      // Use $unset for removing the receipt field
-      await Expense.findByIdAndUpdate(id, {
-        ...updateData,
-        $unset: { receipt: 1 },
-      });
-    } else if (receiptFile && receiptFile.size > 0) {
-      // Delete old receipt if exists
-      if (expense.receipt) {
-        await deleteReceiptImage(expense.receipt.publicId);
+    // Handle Location
+    const locationStr = formData.get("location") as string;
+    if (locationStr) {
+      try {
+        updateData.location = JSON.parse(locationStr);
+      } catch (e) {
+        console.error("Failed to parse location", e);
       }
-
-      const bytes = await receiptFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const uploadResult = await uploadReceiptImage(buffer, receiptFile.name);
-
-      updateData.receipt = {
-        publicId: uploadResult.public_id,
-        secureUrl: uploadResult.secure_url,
-        width: uploadResult.width,
-        height: uploadResult.height,
-        format: uploadResult.format,
-        bytes: uploadResult.bytes,
-      };
+    } else {
+      updateData.$unset = { location: 1 };
     }
 
-    if (!removeReceipt) {
-      await Expense.findByIdAndUpdate(id, updateData, { new: true });
+    // Handle Receipts
+    const rawExistingReceipts = formData.get("existingReceipts") as string;
+    const existingReceipts = rawExistingReceipts ? JSON.parse(rawExistingReceipts) : [];
+
+    // Delete receipts that are no longer in existingReceipts
+    if (expense.receipts && expense.receipts.length > 0) {
+      const existingPublicIds = existingReceipts.map((r: any) => r.publicId);
+      const receiptsToDelete = expense.receipts.filter(
+        (r) => !existingPublicIds.includes(r.publicId)
+      );
+      
+      for (const r of receiptsToDelete) {
+        if (r.publicId) {
+          try {
+            await deleteReceiptImage(r.publicId);
+          } catch (e) {
+            console.error("Failed to delete removed receipt from cloudinary", e);
+          }
+        }
+      }
     }
+
+    // Upload new receipts
+    const newReceipts = formData.getAll("receipts") as File[];
+    const uploadedReceipts = [];
+
+    for (const file of newReceipts) {
+      if (file && file.size > 0) {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const uploadResult = await uploadReceiptImage(buffer, file.name);
+
+        uploadedReceipts.push({
+          publicId: uploadResult.public_id,
+          secureUrl: uploadResult.secure_url,
+          width: uploadResult.width,
+          height: uploadResult.height,
+          format: uploadResult.format,
+          bytes: uploadResult.bytes,
+        });
+      }
+    }
+
+    updateData.receipts = [...existingReceipts, ...uploadedReceipts];
+
+    await Expense.findByIdAndUpdate(id, updateData, { new: true });
 
     revalidatePath("/expenses");
     revalidatePath(`/expenses/${id}`);
@@ -232,9 +285,24 @@ export async function deleteExpense(id: string) {
       return { error: "Expense not found" };
     }
 
-    // Delete receipt from Cloudinary
-    if (expense.receipt) {
-      await deleteReceiptImage(expense.receipt.publicId);
+    // Delete all receipts from Cloudinary
+    if (expense.receipts && expense.receipts.length > 0) {
+      for (const r of expense.receipts) {
+        if (r.publicId) {
+          try {
+            await deleteReceiptImage(r.publicId);
+          } catch (e) {
+            console.error("Failed to delete receipt", e);
+          }
+        }
+      }
+    }
+
+    // Fallback if there's a legacy single receipt
+    if ((expense as any).receipt) {
+       try {
+         await deleteReceiptImage((expense as any).receipt.publicId);
+       } catch (e) {}
     }
 
     await Expense.findByIdAndDelete(id);

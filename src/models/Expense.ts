@@ -17,6 +17,14 @@ export interface IReceiptImage {
   bytes: number;
 }
 
+export interface ILocation {
+  type: "auto" | "manual";
+  areaName?: string;
+  mapLink?: string;
+  lat?: number;
+  lng?: number;
+}
+
 export interface IExpense extends Document {
   _id: mongoose.Types.ObjectId;
   title: string;
@@ -27,7 +35,8 @@ export interface IExpense extends Document {
   description?: string;
   vendor?: string;
   invoiceNumber?: string;
-  receipt?: IReceiptImage;
+  receipts?: IReceiptImage[];
+  location?: ILocation;
   isArchived: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -94,9 +103,19 @@ const ExpenseSchema = new Schema<IExpense>(
       trim: true,
       maxlength: [100, "Invoice number cannot be more than 100 characters"],
     },
-    receipt: {
-      type: ReceiptImageSchema,
-      default: undefined,
+    receipts: {
+      type: [ReceiptImageSchema],
+      default: [],
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ["auto", "manual"],
+      },
+      areaName: String,
+      mapLink: String,
+      lat: Number,
+      lng: Number,
     },
     isArchived: {
       type: Boolean,

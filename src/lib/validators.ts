@@ -26,16 +26,15 @@ export const expenseSchema = z.object({
     .max(1000, "Description cannot exceed 1000 characters")
     .optional()
     .or(z.literal("")),
-  vendor: z
-    .string()
-    .max(200, "Vendor name cannot exceed 200 characters")
-    .optional()
-    .or(z.literal("")),
-  invoiceNumber: z
-    .string()
-    .max(100, "Invoice number cannot exceed 100 characters")
-    .optional()
-    .or(z.literal("")),
+  vendor: z.string().max(200, "Vendor name cannot be more than 200 characters").optional().or(z.literal("")),
+  invoiceNumber: z.string().max(100, "Invoice number cannot be more than 100 characters").optional().or(z.literal("")),
+  location: z.object({
+    type: z.enum(["auto", "manual"]),
+    areaName: z.string().optional(),
+    mapLink: z.string().optional(),
+    lat: z.number().optional(),
+    lng: z.number().optional()
+  }).optional()
 });
 
 export const budgetSchema = z.object({
