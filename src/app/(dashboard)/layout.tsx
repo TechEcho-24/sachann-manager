@@ -14,14 +14,21 @@ import {
   Menu,
   X,
   Users,
+  Bot,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { logoutAction } from "@/actions/auth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { FloatingChatWidget } from "@/components/assistant/FloatingChatWidget";
 
 const navItems = [
+  {
+    label: "AI Assistant",
+    href: "/assistant",
+    icon: Bot,
+  },
   {
     label: "Dashboard",
     href: "/dashboard",
@@ -267,6 +274,9 @@ export default function DashboardLayout({
           </Link>
         </div>
       </nav>
+
+      {/* Floating Chat Widget */}
+      <FloatingChatWidget />
     </div>
   );
 }
