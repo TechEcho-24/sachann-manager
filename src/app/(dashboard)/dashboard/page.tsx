@@ -107,7 +107,7 @@ export default function DashboardPage() {
       {/* Lifetime Stats */}
       {!loading && lifetime && (
         <div className="mb-6 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
-          <h2 className="text-sm font-medium text-slate-300 mb-1">Lifetime Total Expenses</h2>
+          <h2 className="text-sm font-medium text-slate-300 mb-1">Total Spend</h2>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div className="text-3xl sm:text-4xl font-bold">
               ₹{lifetime.totalExpenses.toLocaleString("en-IN")}

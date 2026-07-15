@@ -38,6 +38,11 @@ const navItems = [
     icon: FileBarChart,
   },
   {
+    label: "Total Spend",
+    href: "/total",
+    icon: FileBarChart,
+  },
+  {
     label: "Budget",
     href: "/budget",
     icon: Wallet,

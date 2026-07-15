@@ -252,33 +252,38 @@ export async function getRecentExpenses(
 export interface LifetimeStats {
   totalExpenses: number;
   payerBreakdown: { payer: string; total: number }[];
+  categoryBreakdown: { category: string; total: number }[];
 }
 
 export async function getLifetimeStats(): Promise<LifetimeStats> {
   await connectDB();
 
-  const result = await Expense.aggregate([
-    {
-      $match: {
-        isArchived: false,
-      },
-    },
-    {
-      $group: {
-        _id: "$paidBy",
-        total: { $sum: "$amount" },
-      },
-    },
+  const [payerResult, categoryResult] = await Promise.all([
+    Expense.aggregate([
+      { $match: { isArchived: false } },
+      { $group: { _id: "$paidBy", total: { $sum: "$amount" } } },
+    ]),
+    Expense.aggregate([
+      { $match: { isArchived: false } },
+      { $group: { _id: "$category", total: { $sum: "$amount" } } },
+    ])
   ]);
 
-  const totalExpenses = result.reduce((sum, item) => sum + item.total, 0);
-  const payerBreakdown = result.map((item) => ({
+  const totalExpenses = payerResult.reduce((sum, item) => sum + item.total, 0);
+  
+  const payerBreakdown = payerResult.map((item) => ({
     payer: item._id,
+    total: item.total,
+  })).sort((a, b) => b.total - a.total);
+
+  const categoryBreakdown = categoryResult.map((item) => ({
+    category: item._id,
     total: item.total,
   })).sort((a, b) => b.total - a.total);
 
   return {
     totalExpenses,
     payerBreakdown,
+    categoryBreakdown,
   };
 }

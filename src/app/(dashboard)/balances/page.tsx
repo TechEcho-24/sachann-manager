@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Plus, Users, Wallet, CreditCard, Calendar } from "lucide-react";
 import { getBalances, getReimbursements } from "@/actions/reimbursement";
 import { format } from "date-fns";
+import { DeleteReimbursementButton } from "@/components/balances/DeleteReimbursementButton";
+
+export const dynamic = "force-dynamic";
 
 export default async function BalancesPage() {
   const [balances, reimbursements] = await Promise.all([
@@ -102,6 +105,7 @@ export default async function BalancesPage() {
                     <th className="px-4 py-3 font-medium">Amount</th>
                     <th className="px-4 py-3 font-medium">Mode</th>
                     <th className="px-4 py-3 font-medium">Notes</th>
+                    <th className="px-4 py-3 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -119,6 +123,9 @@ export default async function BalancesPage() {
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{r.paymentMode || "-"}</td>
                       <td className="px-4 py-3 text-muted-foreground truncate max-w-[200px]">{r.notes || "-"}</td>
+                      <td className="px-4 py-3 text-right">
+                        <DeleteReimbursementButton id={r._id} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

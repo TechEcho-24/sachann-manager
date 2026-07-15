@@ -117,3 +117,29 @@ export async function createReimbursement(formData: FormData) {
     return { error: error.message || "Failed to create reimbursement" };
   }
 }
+
+export async function deleteReimbursement(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await connectDB();
+
+    const reimbursement = await Reimbursement.findById(id);
+    if (!reimbursement) {
+      return { error: "Reimbursement not found" };
+    }
+
+    await Reimbursement.findByIdAndDelete(id);
+
+    revalidatePath("/balances");
+    revalidatePath("/dashboard");
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to delete reimbursement:", error);
+    return { error: error.message || "Failed to delete reimbursement" };
+  }
+}
