@@ -5,6 +5,7 @@ import Reimbursement from "@/models/Reimbursement";
 import Expense from "@/models/Expense";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { type Payer } from "@/lib/constants";
 
 export interface PayerBalance {
   payer: string;
@@ -90,7 +91,7 @@ export async function createReimbursement(formData: FormData) {
     await connectDB();
 
     const amount = parseFloat(formData.get("amount") as string);
-    const paidTo = formData.get("paidTo") as string;
+    const paidTo = formData.get("paidTo") as Payer;
     const dateStr = formData.get("date") as string;
     const paymentMode = formData.get("paymentMode") as string;
     const notes = formData.get("notes") as string;
