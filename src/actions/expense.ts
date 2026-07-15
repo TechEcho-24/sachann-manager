@@ -84,14 +84,14 @@ export async function createExpense(formData: FormData) {
   }
 
   const rawData = {
-    title: formData.get("title") as string,
-    amount: formData.get("amount") as string,
-    category: formData.get("category") as string,
-    paidBy: formData.get("paidBy") as string,
-    date: formData.get("date") as string,
-    description: formData.get("description") as string,
-    vendor: formData.get("vendor") as string,
-    invoiceNumber: formData.get("invoiceNumber") as string,
+    title: (formData.get("title") as string) || "",
+    amount: (formData.get("amount") as string) || "",
+    category: (formData.get("category") as string) || "",
+    paidBy: (formData.get("paidBy") as string) || "",
+    date: (formData.get("date") as string) || "",
+    description: (formData.get("description") as string) || "",
+    vendor: (formData.get("vendor") as string) || "",
+    invoiceNumber: (formData.get("invoiceNumber") as string) || "",
   };
 
   const result = expenseSchema.safeParse(rawData);
@@ -143,14 +143,14 @@ export async function updateExpense(id: string, formData: FormData) {
   }
 
   const rawData = {
-    title: formData.get("title") as string,
-    amount: formData.get("amount") as string,
-    category: formData.get("category") as string,
-    paidBy: formData.get("paidBy") as string,
-    date: formData.get("date") as string,
-    description: formData.get("description") as string,
-    vendor: formData.get("vendor") as string,
-    invoiceNumber: formData.get("invoiceNumber") as string,
+    title: (formData.get("title") as string) || "",
+    amount: (formData.get("amount") as string) || "",
+    category: (formData.get("category") as string) || "",
+    paidBy: (formData.get("paidBy") as string) || "",
+    date: (formData.get("date") as string) || "",
+    description: (formData.get("description") as string) || "",
+    vendor: (formData.get("vendor") as string) || "",
+    invoiceNumber: (formData.get("invoiceNumber") as string) || "",
   };
 
   const result = expenseSchema.safeParse(rawData);
