@@ -67,6 +67,19 @@ export function ReceiptUpload({
         const compressedFiles = await Promise.all(
           filesToProcess.map((f) => compressImage(f))
         );
+
+        let originalSize = 0;
+        let compressedSize = 0;
+        filesToProcess.forEach((f) => { originalSize += f.size; });
+        compressedFiles.forEach((f) => { compressedSize += f.size; });
+
+        if (originalSize > 0 && compressedSize < originalSize) {
+          const savings = ((originalSize - compressedSize) / originalSize) * 100;
+          if (savings > 1) {
+            toast.success(`Images auto-compressed by ${savings.toFixed(0)}%!`);
+          }
+        }
+
         onFilesChange([...files, ...compressedFiles]);
       } catch (error) {
         console.error("Failed to compress images", error);
