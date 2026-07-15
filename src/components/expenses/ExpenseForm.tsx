@@ -108,11 +108,9 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
     formData.set("existingReceipts", JSON.stringify(existingReceipts));
 
     // Handle Location
-    if (showDetails) {
-      const locationData = { type: locationType, areaName, mapLink, lat, lng };
-      if (locationData.mapLink || locationData.areaName || locationData.lat) {
-        formData.set("location", JSON.stringify(locationData));
-      }
+    const locationData = { type: locationType, areaName, mapLink, lat, lng };
+    if (locationData.mapLink || locationData.areaName || locationData.lat) {
+      formData.set("location", JSON.stringify(locationData));
     }
 
     try {
@@ -271,6 +269,87 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
         )}
       </div>
 
+      {/* Location Section */}
+      <div className="space-y-3 pt-2">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <MapPin className="w-4 h-4" />
+          Location
+        </Label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setLocationType("auto")}
+            className={cn(
+              "px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-150",
+              locationType === "auto"
+                ? "border-brand-green bg-brand-green/10 text-brand-green"
+                : "border-border bg-card text-muted-foreground"
+            )}
+          >
+            Current Location
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocationType("manual")}
+            className={cn(
+              "px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-150",
+              locationType === "manual"
+                ? "border-brand-green bg-brand-green/10 text-brand-green"
+                : "border-border bg-card text-muted-foreground"
+            )}
+          >
+            Manual Entry
+          </button>
+        </div>
+
+        {locationType === "auto" ? (
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGetLocation}
+              disabled={isLocating}
+              className="rounded-xl"
+            >
+              {isLocating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <MapPin className="w-4 h-4 mr-2" />
+              )}
+              {lat && lng ? "Update Location" : "Get Current Location"}
+            </Button>
+            {lat && lng && (
+              <span className="text-xs text-brand-green flex-1">
+                Location acquired
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="areaName" className="text-xs text-muted-foreground">Area Name</Label>
+              <Input
+                id="areaName"
+                value={areaName}
+                onChange={(e) => setAreaName(e.target.value)}
+                placeholder="e.g., Connaught Place"
+                className="h-10 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mapLink" className="text-xs text-muted-foreground">Map Link</Label>
+              <Input
+                id="mapLink"
+                value={mapLink}
+                onChange={(e) => setMapLink(e.target.value)}
+                placeholder="https://maps.google.com/..."
+                className="h-10 rounded-xl"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Additional Details Toggle */}
       <button
         type="button"
@@ -288,86 +367,6 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
 
       {showDetails && (
         <div className="space-y-6 pl-0 border-l-2 border-border/60 ml-0 rounded-none">
-          {/* Location Section */}
-          <div className="space-y-3 pt-2">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              Location
-            </Label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setLocationType("auto")}
-                className={cn(
-                  "px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-150",
-                  locationType === "auto"
-                    ? "border-brand-green bg-brand-green/10 text-brand-green"
-                    : "border-border bg-card text-muted-foreground"
-                )}
-              >
-                Current Location
-              </button>
-              <button
-                type="button"
-                onClick={() => setLocationType("manual")}
-                className={cn(
-                  "px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-150",
-                  locationType === "manual"
-                    ? "border-brand-green bg-brand-green/10 text-brand-green"
-                    : "border-border bg-card text-muted-foreground"
-                )}
-              >
-                Manual Entry
-              </button>
-            </div>
-
-            {locationType === "auto" ? (
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleGetLocation}
-                  disabled={isLocating}
-                  className="rounded-xl"
-                >
-                  {isLocating ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <MapPin className="w-4 h-4 mr-2" />
-                  )}
-                  {lat && lng ? "Update Location" : "Get Current Location"}
-                </Button>
-                {lat && lng && (
-                  <span className="text-xs text-brand-green flex-1">
-                    Location acquired
-                  </span>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="areaName" className="text-xs text-muted-foreground">Area Name</Label>
-                  <Input
-                    id="areaName"
-                    value={areaName}
-                    onChange={(e) => setAreaName(e.target.value)}
-                    placeholder="e.g., Connaught Place"
-                    className="h-10 rounded-xl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mapLink" className="text-xs text-muted-foreground">Map Link</Label>
-                  <Input
-                    id="mapLink"
-                    value={mapLink}
-                    onChange={(e) => setMapLink(e.target.value)}
-                    placeholder="https://maps.google.com/..."
-                    className="h-10 rounded-xl"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Vendor */}
           <div className="space-y-2">
