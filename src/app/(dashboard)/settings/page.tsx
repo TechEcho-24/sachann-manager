@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { changePasswordAction } from "@/actions/auth";
-import { Leaf, Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import { Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
@@ -144,8 +145,8 @@ export default function SettingsPage() {
       {/* App Info */}
       <div className="bg-card rounded-2xl border border-border p-5 lg:p-8">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-xl gradient-green flex items-center justify-center">
-            <Leaf className="w-[18px] h-[18px] text-white" />
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden">
+            <Image src="/logo.png" alt="Logo" width={36} height={36} className="object-cover" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-foreground">

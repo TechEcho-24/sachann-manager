@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { loadEnvConfig } from "@next/env";
+
+// Load environment variables from .env.local
+loadEnvConfig(process.cwd());
 
 // Direct MongoDB connection for seeding (outside Next.js context)
 const MONGODB_URI = process.env.MONGODB_URI;

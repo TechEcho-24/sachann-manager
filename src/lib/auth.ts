@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
@@ -14,7 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Please provide email and password");
+          throw new CredentialsSignin("Please provide email and password");
         }
 
         await connectDB();
@@ -24,7 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }).select("+password");
 
         if (!user) {
-          throw new Error("Invalid email or password");
+          throw new CredentialsSignin("Invalid email or password");
         }
 
         const isPasswordMatch = await bcrypt.compare(
@@ -33,7 +33,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
 
         if (!isPasswordMatch) {
-          throw new Error("Invalid email or password");
+          throw new CredentialsSignin("Invalid email or password");
         }
 
         return {

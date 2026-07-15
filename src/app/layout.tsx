@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
   subsets: ["latin"],
 });
 
@@ -17,6 +18,9 @@ export const metadata: Metadata = {
   title: "Sachann Manager — Expense Management",
   description:
     "Premium expense management application for Sachann, a growing Indian food brand. Track expenses, manage budgets, and generate reports.",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}
@@ -37,7 +41,7 @@ export default function RootLayout({
           closeButton
           toastOptions={{
             style: {
-              fontFamily: "var(--font-geist-sans)",
+              fontFamily: "var(--font-poppins)",
             },
           }}
         />

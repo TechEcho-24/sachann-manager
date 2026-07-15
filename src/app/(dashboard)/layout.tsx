@@ -13,7 +13,9 @@ import {
   Plus,
   Menu,
   X,
+  Users,
 } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { logoutAction } from "@/actions/auth";
 import { cn } from "@/lib/utils";
@@ -39,6 +41,11 @@ const navItems = [
     label: "Budget",
     href: "/budget",
     icon: Wallet,
+  },
+  {
+    label: "Balances",
+    href: "/balances",
+    icon: Users,
   },
   {
     label: "Settings",
@@ -76,8 +83,8 @@ export default function DashboardLayout({
       <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border fixed inset-y-0 left-0 z-30">
         {/* Brand */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl gradient-green">
-            <Leaf className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden">
+            <Image src="/logo.png" alt="Logo" width={36} height={36} className="object-cover" />
           </div>
           <div>
             <h1 className="font-bold text-foreground text-sm">Sachann</h1>
@@ -146,8 +153,8 @@ export default function DashboardLayout({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl gradient-green">
-              <Leaf className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden">
+              <Image src="/logo.png" alt="Logo" width={36} height={36} className="object-cover" />
             </div>
             <span className="font-bold text-foreground text-sm">
               Sachann Manager
@@ -200,8 +207,8 @@ export default function DashboardLayout({
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg gradient-green">
-              <Leaf className="w-4 h-4 text-white" />
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg overflow-hidden">
+              <Image src="/logo.png" alt="Logo" width={28} height={28} className="object-cover" />
             </div>
             <span className="font-semibold text-sm">Sachann</span>
           </div>

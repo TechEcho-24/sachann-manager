@@ -21,11 +21,13 @@ import {
   getPaidByBreakdown,
   getDailyExpenses,
   getRecentExpenses,
+  getLifetimeStats,
   type DashboardSummary,
   type CategoryBreakdown,
   type PaidByBreakdown,
   type DailyExpense,
   type RecentExpense,
+  type LifetimeStats,
 } from "@/actions/dashboard";
 
 export default function DashboardPage() {
@@ -38,23 +40,26 @@ export default function DashboardPage() {
   const [paidBy, setPaidBy] = useState<PaidByBreakdown[]>([]);
   const [daily, setDaily] = useState<DailyExpense[]>([]);
   const [recent, setRecent] = useState<RecentExpense[]>([]);
+  const [lifetime, setLifetime] = useState<LifetimeStats | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [summaryData, catData, paidByData, dailyData, recentData] =
+      const [summaryData, catData, paidByData, dailyData, recentData, lifetimeData] =
         await Promise.all([
           getDashboardData(month, year),
           getCategoryBreakdown(month, year),
           getPaidByBreakdown(month, year),
           getDailyExpenses(month, year),
           getRecentExpenses(5),
+          getLifetimeStats(),
         ]);
       setSummary(summaryData);
       setCategories(catData);
       setPaidBy(paidByData);
       setDaily(dailyData);
       setRecent(recentData);
+      setLifetime(lifetimeData);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
     } finally {
@@ -89,6 +94,26 @@ export default function DashboardPage() {
           onChange={handleMonthChange}
         />
       </div>
+
+      {/* Lifetime Stats */}
+      {!loading && lifetime && (
+        <div className="mb-6 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
+          <h2 className="text-sm font-medium text-slate-300 mb-1">Lifetime Total Expenses</h2>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div className="text-3xl sm:text-4xl font-bold">
+              ₹{lifetime.totalExpenses.toLocaleString("en-IN")}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {lifetime.payerBreakdown.slice(0, 4).map((p) => (
+                <div key={p.payer} className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs sm:text-sm">
+                  <span className="text-slate-300 mr-1.5">{p.payer}:</span>
+                  <span className="font-semibold">₹{p.total.toLocaleString("en-IN")}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       {loading ? (

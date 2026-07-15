@@ -248,3 +248,37 @@ export async function getRecentExpenses(
     date: e.date.toISOString(),
   }));
 }
+
+export interface LifetimeStats {
+  totalExpenses: number;
+  payerBreakdown: { payer: string; total: number }[];
+}
+
+export async function getLifetimeStats(): Promise<LifetimeStats> {
+  await connectDB();
+
+  const result = await Expense.aggregate([
+    {
+      $match: {
+        isArchived: false,
+      },
+    },
+    {
+      $group: {
+        _id: "$paidBy",
+        total: { $sum: "$amount" },
+      },
+    },
+  ]);
+
+  const totalExpenses = result.reduce((sum, item) => sum + item.total, 0);
+  const payerBreakdown = result.map((item) => ({
+    payer: item._id,
+    total: item.total,
+  })).sort((a, b) => b.total - a.total);
+
+  return {
+    totalExpenses,
+    payerBreakdown,
+  };
+}

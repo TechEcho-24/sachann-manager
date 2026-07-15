@@ -23,17 +23,17 @@ export async function loginAction(formData: FormData) {
       redirect: false,
     });
     return { success: true };
-  } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "type" in error &&
-      error.type === "CredentialsSignin"
-    ) {
+  } catch (error: any) {
+    console.error("Login error:", error);
+    if (error?.type === "CredentialsSignin") {
       return { error: "Invalid email or password" };
     }
-    // For redirect errors from NextAuth, re-throw
-    throw error;
+    // If it's a Next.js redirect error, we MUST re-throw it so Next.js can handle the redirect
+    if (error?.message === "NEXT_REDIRECT") {
+      throw error;
+    }
+    // For any other error, return the message so it shows in the UI instead of a 500
+    return { error: error?.message || "An unexpected error occurred during login." };
   }
 }
 

@@ -6,7 +6,8 @@ import { loginAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Leaf, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -50,8 +51,10 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-green mb-4 shadow-lg">
-            <Leaf className="w-8 h-8 text-white" />
+          <div className="flex justify-center mb-8">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl shadow-brand-green/20 overflow-hidden">
+              <Image src="/favicon.png" alt="Sachann Logo" width={64} height={64} className="object-cover" />
+            </div>
           </div>
           <h1 className="text-2xl font-bold text-foreground">
             Sachann Manager

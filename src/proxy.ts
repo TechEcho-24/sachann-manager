@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 // Simple JWT-based middleware that doesn't import Mongoose
 // Auth.js stores the session token in a cookie
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const sessionToken =
     request.cookies.get("authjs.session-token")?.value ||
     request.cookies.get("__Secure-authjs.session-token")?.value;
