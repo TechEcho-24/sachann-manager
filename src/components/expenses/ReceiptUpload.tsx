@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Camera } from "lucide-react";
 import { cn, formatFileSize } from "@/lib/utils";
 
 interface ReceiptUploadProps {
@@ -142,9 +142,9 @@ export function ReceiptUpload({
 
   // Upload zone
   return (
-    <label
+    <div
       className={cn(
-        "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors",
+        "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 transition-colors",
         isDragging
           ? "border-brand-green bg-brand-green/5"
           : "border-border hover:border-brand-green/40 hover:bg-muted/30"
@@ -156,7 +156,7 @@ export function ReceiptUpload({
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
     >
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-2 mb-4">
         <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
           {isDragging ? (
             <ImageIcon className="w-5 h-5 text-brand-green" />
@@ -169,17 +169,34 @@ export function ReceiptUpload({
             {isDragging ? "Drop your receipt" : "Upload receipt"}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Drag & drop or click to browse • Max 10MB
+            Max 10MB
           </p>
         </div>
       </div>
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={handleChange}
-      />
-    </label>
+
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+        <label className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-brand-green text-white rounded-lg text-sm font-medium cursor-pointer hover:bg-brand-green-light transition-colors shadow-sm">
+          <Camera className="w-4 h-4" />
+          Take Photo
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleChange}
+          />
+        </label>
+        <label className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-card text-foreground rounded-lg text-sm font-medium cursor-pointer hover:bg-slate-50 dark:hover:bg-muted transition-colors border border-border shadow-sm">
+          <ImageIcon className="w-4 h-4" />
+          Gallery
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+    </div>
   );
 }

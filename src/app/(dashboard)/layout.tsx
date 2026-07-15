@@ -206,11 +206,8 @@ export default function DashboardLayout({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg overflow-hidden">
-              <Image src="/logo.png" alt="Logo" width={28} height={28} className="object-cover" />
-            </div>
-            <span className="font-semibold text-sm">Sachann</span>
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-border/50">
+            <Image src="/logo.png" alt="Logo" width={40} height={40} className="object-cover" />
           </div>
           <Link
             href="/expenses/new"

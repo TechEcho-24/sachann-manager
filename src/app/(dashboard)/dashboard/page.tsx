@@ -76,13 +76,22 @@ export default function DashboardPage() {
     setYear(newYear);
   }
 
+  function getGreeting() {
+    const hour = now.getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  }
+
+  const greeting = getGreeting();
+
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold text-foreground">
-            Dashboard
+            {greeting}!
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Overview of your expenses
