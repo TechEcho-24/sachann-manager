@@ -10,6 +10,7 @@ export const EXPENSE_CATEGORIES = [
   "Utilities",
   "Rent",
   "Equipment",
+  "Technical Infra",
   "Miscellaneous",
 ] as const;
 
