@@ -11,6 +11,7 @@ import {
   Building,
   FileText,
   ImageIcon,
+  MapPin,
 } from "lucide-react";
 
 interface ExpenseDetailPageProps {
@@ -110,23 +111,58 @@ export default async function ExpenseDetailPage({
           </div>
         )}
 
-        {/* Receipt */}
-        {expense.receipt && (
+        {/* Location */}
+        {expense.location && (
           <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
+            <p className="text-xs text-muted-foreground mb-1">Location</p>
+            <div className="flex items-center gap-2 text-sm text-foreground">
+              <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              {expense.location.areaName ? (
+                <span>{expense.location.areaName}</span>
+              ) : (
+                <span>GPS Location</span>
+              )}
+              {expense.location.mapLink && (
+                <a
+                  href={expense.location.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-brand-green hover:underline ml-2"
+                >
+                  View on Map
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Receipts */}
+        {expense.receipts && expense.receipts.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
               <ImageIcon className="w-4 h-4 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">
-                Receipt • {expense.receipt.format.toUpperCase()} •{" "}
-                {formatFileSize(expense.receipt.bytes)}
+                Receipts ({expense.receipts.length})
               </p>
             </div>
-            <div className="rounded-xl overflow-hidden border border-border bg-muted/20 max-w-md">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={expense.receipt.secureUrl}
-                alt="Receipt"
-                className="w-full h-auto"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {expense.receipts.map((receipt, idx) => (
+                <div key={receipt.publicId} className="rounded-xl overflow-hidden border border-border bg-muted/20">
+                  <a href={receipt.secureUrl} target="_blank" rel="noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={receipt.secureUrl}
+                      alt={`Receipt ${idx + 1}`}
+                      className="w-full h-auto max-h-[400px] object-cover hover:opacity-90 transition-opacity"
+                    />
+                  </a>
+                  <div className="p-2 text-center border-t border-border bg-background/50">
+                    <p className="text-xs text-muted-foreground">
+                      {receipt.format.toUpperCase()} • {formatFileSize(receipt.bytes)}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

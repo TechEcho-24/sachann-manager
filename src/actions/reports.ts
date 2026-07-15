@@ -157,7 +157,7 @@ export async function exportExpensesToCSV(
     e.vendor ? `"${e.vendor.replace(/"/g, '""')}"` : "",
     e.invoiceNumber || "",
     e.description ? `"${e.description.replace(/"/g, '""')}"` : "",
-    e.receipt ? "Yes" : "No",
+    (e.receipts && e.receipts.length > 0) ? "Yes" : "No",
   ]);
 
   return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
