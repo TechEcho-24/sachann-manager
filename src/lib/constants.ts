@@ -15,5 +15,5 @@ export const EXPENSE_CATEGORIES = [
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
-export const PAYERS = ["Company", "Cash", "Mummy", "Papa", "Anuj", "Anurag"] as const;
+export const PAYERS = ["Mummy", "Papa", "Anuj", "Anurag"] as const;
 export type Payer = (typeof PAYERS)[number];
