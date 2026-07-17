@@ -56,9 +56,9 @@ function getClientGreeting(): string {
     new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", hour12: false }).format(now)
   );
   if (hour >= 5 && hour < 12) return "Good Morning Sachann Family 🌤️";
-  if (hour >= 12 && hour < 17) return "Good Afternoon 👋";
-  if (hour >= 17 && hour < 22) return "Good Evening 🌙";
-  return "Good Night ✨";
+  if (hour >= 12 && hour < 17) return "Good Afternoon Sachann Family 👋";
+  if (hour >= 17 && hour < 22) return "Good Evening Sachann Family 🌙";
+  return "Good Night Sachann Family ✨";
 }
 
 const MOTIVATIONS = [
