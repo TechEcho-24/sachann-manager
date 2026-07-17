@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { usePathname } from "next/navigation";
 import { compressImage } from "@/lib/imageUtils";
-import { uploadChatReceiptAction } from "@/actions/chat";
 
 type Language = "hinglish" | "hindi" | "english";
 
@@ -56,7 +55,7 @@ function getClientGreeting(): string {
   const hour = parseInt(
     new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", hour12: false }).format(now)
   );
-  if (hour >= 5 && hour < 12) return "Good Morning 🌤️";
+  if (hour >= 5 && hour < 12) return "Good Morning Sachann Family 🌤️";
   if (hour >= 12 && hour < 17) return "Good Afternoon 👋";
   if (hour >= 17 && hour < 22) return "Good Evening 🌙";
   return "Good Night ✨";
@@ -213,37 +212,45 @@ function ChatPanel({
     if (!file) return;
 
     setIsUploading(true);
-    toast.info("Image compress aur upload ho rahi hai...");
+    toast.info("Compressing aur upload ho rahi hai...");
     try {
+      // 1. Compress client-side
       const compressedFile = await compressImage(file);
+      const originalSize = file.size;
+      const compressedSize = compressedFile.size;
+      if (originalSize > 0 && compressedSize < originalSize) {
+        const saved = ((originalSize - compressedSize) / originalSize * 100).toFixed(0);
+        if (Number(saved) > 1) toast.success(`Image ${saved}% compress hua!`);
+      }
+
+      // 2. Upload via /api/assistant/attach-receipt (saves to Cloudinary + MongoDB draft)
       const formData = new FormData();
       formData.append("receipt", compressedFile);
-
-      const result = await uploadChatReceiptAction(formData);
+      const res = await fetch("/api/assistant/attach-receipt", { method: "POST", body: formData });
+      const result = await res.json();
       if (result.error) throw new Error(result.error);
-      
+
       if (result.success && result.receipt) {
-        toast.success("Image uploaded!");
-        
-        // Add a message to the UI to show the image
+        toast.success("📎 Receipt attach ho gayi!");
+
+        // 3. Show in chat UI
         setMessages((prev) => [
           ...prev,
           {
             role: "user",
-            content: `[System: User uploaded a receipt. URL: ${result.receipt.secureUrl}]`,
+            content: `📎 Receipt attached`,
             timestamp: new Date(),
           },
         ]);
-        
-        // Send this message to the assistant so it knows the receipt is uploaded
-        await sendMessage(`[System: User uploaded a receipt. URL: ${result.receipt.secureUrl}]`);
+
+        // 4. Notify Gemini to proceed to confirmation
+        await sendMessage(`[System: User ne ek receipt upload ki hai. URL: ${result.receipt.secureUrl}. Receipt draft mein save ho gayi hai. Ab confirmation summary dikhao.]`);
       }
     } catch (error) {
       console.error(error);
-      toast.error("Image upload fail ho gaya. Kripya dobara try karein.");
+      toast.error("Image upload fail hua. Dobara try karein.");
     } finally {
       setIsUploading(false);
-      // reset file input
       e.target.value = "";
     }
   };

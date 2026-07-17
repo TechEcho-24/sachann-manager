@@ -14,7 +14,6 @@ import {
   Menu,
   X,
   Users,
-  Bot,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -22,13 +21,9 @@ import { logoutAction } from "@/actions/auth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { FloatingChatWidget } from "@/components/assistant/FloatingChatWidget";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 
 const navItems = [
-  {
-    label: "AI Assistant",
-    href: "/assistant",
-    icon: Bot,
-  },
   {
     label: "Dashboard",
     href: "/dashboard",
@@ -235,7 +230,7 @@ export default function DashboardLayout({
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-md border-t border-border">
         <div className="flex items-center justify-around py-2 px-2">
-          {navItems.slice(0, 4).map((item) => (
+          {[navItems[0], navItems[1], navItems[2], navItems[6]].map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -255,28 +250,14 @@ export default function DashboardLayout({
               <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           ))}
-          <Link
-            href="/settings"
-            className={cn(
-              "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[60px]",
-              isActive("/settings")
-                ? "text-brand-green"
-                : "text-muted-foreground"
-            )}
-          >
-            <Settings
-              className={cn(
-                "w-5 h-5",
-                isActive("/settings") && "stroke-[2.5]"
-              )}
-            />
-            <span className="text-[10px] font-medium">Settings</span>
-          </Link>
         </div>
       </nav>
 
       {/* Floating Chat Widget */}
       <FloatingChatWidget />
+
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
     </div>
   );
 }

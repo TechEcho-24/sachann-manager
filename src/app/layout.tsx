@@ -20,6 +20,17 @@ export const metadata: Metadata = {
     "Premium expense management application for Sachann, a growing Indian food brand. Track expenses, manage budgets, and generate reports.",
   icons: {
     icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Sachann Manager',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'theme-color': '#128C7E',
   },
 };
 
