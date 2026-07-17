@@ -78,9 +78,10 @@ export default function DashboardPage() {
 
   function getGreeting() {
     const hour = now.getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
+    if (hour >= 5 && hour < 12) return "Good Morning Sachann Family";
+    if (hour >= 12 && hour < 17) return "Good Afternoon Sachann Family";
+    if (hour >= 17 && hour < 22) return "Good Evening Sachann Family";
+    return "Good Night Sachann Family";
   }
 
   const greeting = getGreeting();
