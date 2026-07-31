@@ -275,7 +275,7 @@ function ChatPanel({
       className={cn(
         "fixed z-50 flex flex-col shadow-2xl overflow-hidden transition-all duration-300 bg-[#ECE5DD]",
         // Mobile: full screen
-        "inset-0 w-full h-full rounded-none",
+        "inset-0 w-full h-[100dvh] sm:h-full rounded-none",
         // Desktop: floating widget
         "md:inset-auto md:bottom-24 md:right-8 md:rounded-2xl md:border md:border-white/10",
         isExpanded
@@ -499,7 +499,7 @@ function ChatPanel({
             placeholder={isListening ? "Sun raha hoon... 🎤" : "Likhein ya bolkar batayein..."}
             rows={1}
             disabled={isLoading}
-            className="flex-1 resize-none bg-transparent text-sm focus:outline-none max-h-24 text-gray-800 placeholder:text-gray-400 leading-relaxed"
+            className="flex-1 resize-none bg-transparent text-base md:text-sm focus:outline-none max-h-24 text-gray-800 placeholder:text-gray-400 leading-relaxed"
             style={{ height: "auto" }}
             onInput={(e) => {
               const t = e.target as HTMLTextAreaElement;

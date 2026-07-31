@@ -518,7 +518,7 @@ export function ChatInterface({ initialGreeting, dailyMotivation, userName }: Ch
             }
             rows={1}
             disabled={isLoading}
-            className="flex-1 resize-none bg-transparent text-sm focus:outline-none max-h-32 min-h-[24px] text-foreground placeholder:text-muted-foreground leading-relaxed"
+            className="flex-1 resize-none bg-transparent text-base md:text-sm focus:outline-none max-h-32 min-h-[24px] text-foreground placeholder:text-muted-foreground leading-relaxed"
             style={{ height: "auto" }}
             onInput={(e) => {
               const t = e.target as HTMLTextAreaElement;

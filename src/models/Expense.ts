@@ -37,6 +37,9 @@ export interface IExpense extends Document {
   invoiceNumber?: string;
   receipts?: IReceiptImage[];
   location?: ILocation;
+  metadata?: {
+    idempotencyKey?: string;
+  };
   isArchived: boolean;
   createdAt: Date;
   updatedAt: Date;

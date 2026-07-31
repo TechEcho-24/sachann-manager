@@ -182,6 +182,7 @@ async function executeTool(
         description: draft.notes,
         location: draft.location ? { type: "manual", areaName: draft.location } : undefined,
         receipts: draft.receipts && draft.receipts.length > 0 ? draft.receipts : [],
+        metadata: { idempotencyKey: draft.idempotencyKey },
         isArchived: false,
       });
 
