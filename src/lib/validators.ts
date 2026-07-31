@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EXPENSE_CATEGORIES, PAYERS } from "@/lib/constants";
+import { EXPENSE_CATEGORIES, PAYERS, SALES_PLATFORMS } from "@/lib/constants";
 
 export const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -60,3 +60,18 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type ExpenseInput = z.infer<typeof expenseSchema>;
 export type BudgetInput = z.infer<typeof budgetSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+export const saleSchema = z.object({
+  amount: z.coerce.number().positive("Amount must be greater than 0"),
+  platform: z.enum(SALES_PLATFORMS, {
+    message: "Please select a valid platform",
+  }),
+  date: z.string().min(1, "Date is required"),
+  notes: z
+    .string()
+    .max(1000, "Notes cannot exceed 1000 characters")
+    .optional()
+    .or(z.literal("")),
+});
+
+export type SaleInput = z.infer<typeof saleSchema>;

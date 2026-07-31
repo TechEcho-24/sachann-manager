@@ -9,7 +9,9 @@ import { SYSTEM_INSTRUCTION } from "@/lib/gemini/system-instruction";
 import connectDB from "@/lib/db";
 import ExpenseDraft from "@/models/ExpenseDraft";
 import Expense from "@/models/Expense";
-import { EXPENSE_CATEGORIES, PAYERS } from "@/lib/constants";
+import SaleDraft from "@/models/SaleDraft";
+import Sale from "@/models/Sale";
+import { EXPENSE_CATEGORIES, PAYERS, SALES_PLATFORMS } from "@/lib/constants";
 import mongoose from "mongoose";
 
 // Rate limit simple tracking (in-memory for now)
@@ -206,8 +208,116 @@ async function executeTool(
         { userId: userObjectId, status: { $in: ["collecting", "awaiting-confirmation"] } },
         { $set: { status: "cancelled" } }
       );
+      await SaleDraft.updateMany(
+        { userId, status: { $in: ["pending", "confirmed"] } },
+        { $set: { status: "cancelled" } }
+      );
       return JSON.stringify({ success: true });
     }
+
+    case "get_or_create_sale_draft": {
+      let draft = await SaleDraft.findOne({
+        userId,
+        status: "pending",
+      }).sort({ createdAt: -1 });
+
+      if (!draft) {
+        draft = await SaleDraft.create({
+          userId,
+          conversationId,
+          status: "pending",
+        });
+      }
+      return JSON.stringify({
+        draftId: draft._id.toString(),
+        amount: draft.amount,
+        platform: draft.platform,
+        dateMode: draft.dateMode,
+        notes: draft.notes,
+        status: draft.status,
+      });
+    }
+
+    case "update_sale_draft": {
+      const draft = await SaleDraft.findOne({
+        userId,
+        status: { $in: ["pending", "confirmed"] },
+      }).sort({ createdAt: -1 });
+
+      if (!draft) return JSON.stringify({ error: "No active sale draft found" });
+
+      const allowedFields = ["amount", "platform", "dateMode", "notes", "status"];
+      for (const field of allowedFields) {
+        if (args[field] !== undefined) {
+          if (field === "platform" && !SALES_PLATFORMS.includes(args[field] as any)) {
+            return JSON.stringify({ error: `Invalid platform: ${args[field]}` });
+          }
+          if (field === "amount") {
+            const amt = parseFloat(String(args[field]));
+            if (isNaN(amt) || amt <= 0) {
+              return JSON.stringify({ error: "Amount must be a positive number" });
+            }
+            (draft as any)[field] = amt;
+            continue;
+          }
+          (draft as any)[field] = args[field];
+        }
+      }
+
+      if (draft.amount && draft.platform && args.status !== "confirmed") {
+        draft.status = "confirmed"; // Ready to be saved
+      }
+
+      await draft.save();
+      return JSON.stringify({
+        success: true,
+        draftId: draft._id.toString(),
+        amount: draft.amount,
+        platform: draft.platform,
+        dateMode: draft.dateMode,
+        notes: draft.notes,
+        status: draft.status,
+      });
+    }
+
+    case "confirm_save_sale": {
+      const draft = await SaleDraft.findOne({
+        userId,
+        status: "confirmed",
+      }).sort({ createdAt: -1 });
+
+      if (!draft) {
+        return JSON.stringify({ error: "No sale draft awaiting confirmation" });
+      }
+
+      if (!draft.amount || !draft.platform) {
+        return JSON.stringify({ error: "Missing required fields in sale draft" });
+      }
+
+      const saleDate = draft.dateMode === "custom" && draft.date
+        ? draft.date
+        : new Date();
+
+      const sale = await Sale.create({
+        amount: draft.amount,
+        platform: draft.platform,
+        date: saleDate,
+        notes: draft.notes,
+        isArchived: false,
+      });
+
+      draft.status = "confirmed";
+      await draft.save();
+
+      return JSON.stringify({
+        success: true,
+        saleId: sale._id.toString(),
+        amount: sale.amount,
+        platform: sale.platform,
+        date: sale.date.toISOString(),
+      });
+    }
+
 
     case "get_expense_summary": {
       const period = (args.period as string) || "this_month";
@@ -419,6 +529,29 @@ const TOOLS = [
       },
     },
   },
+  {
+    name: "get_or_create_sale_draft",
+    description: "Get the current active sale draft, or create a new one if none exists.",
+    parameters: { type: "object", properties: {} },
+  },
+  {
+    name: "update_sale_draft",
+    description: "Update fields of the active sale draft.",
+    parameters: {
+      type: "object",
+      properties: {
+        amount: { type: "number", description: "Amount in INR" },
+        platform: { type: "string", description: "Platform: Amazon, Flipkart, Blinkit, Offline, Other" },
+        notes: { type: "string", description: "Additional notes (optional)" },
+        status: { type: "string", description: "Draft status" },
+      },
+    },
+  },
+  {
+    name: "confirm_save_sale",
+    description: "Save the confirmed sale to the database. Only call this after explicit user confirmation.",
+    parameters: { type: "object", properties: {} },
+  },
 ];
 
 export async function POST(req: NextRequest) {
@@ -553,6 +686,22 @@ export async function POST(req: NextRequest) {
             }
           } catch (e) {}
         }
+        
+        // Build sale summary for UI if draft updated
+        if (name === "update_sale_draft" || name === "get_or_create_sale_draft") {
+          try {
+            const parsed = JSON.parse(result);
+            if (parsed.status === "confirmed" && parsed.platform && parsed.amount) {
+              expenseSummary = {
+                type: "sale_confirmation",
+                amount: parsed.amount,
+                platform: parsed.platform,
+                dateMode: parsed.dateMode,
+                notes: parsed.notes,
+              };
+            }
+          } catch (e) {}
+        }
       }
 
       // Send function results back to Gemini
@@ -576,6 +725,8 @@ export async function POST(req: NextRequest) {
 
     if (expenseSummary && (expenseSummary as any).type === "confirmation") {
       quickReplies = ["✅ Confirm & Save", "✏️ Edit", "❌ Cancel"];
+    } else if (expenseSummary && (expenseSummary as any).type === "sale_confirmation") {
+      quickReplies = ["✅ Confirm & Save Sale", "✏️ Edit", "❌ Cancel"];
     } else if (
       response?.toLowerCase().includes("photo") ||
       response?.toLowerCase().includes("receipt") ||

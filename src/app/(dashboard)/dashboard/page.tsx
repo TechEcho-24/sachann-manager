@@ -108,18 +108,28 @@ export default function DashboardPage() {
       {/* Lifetime Stats */}
       {!loading && lifetime && (
         <div className="mb-6 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
-          <h2 className="text-sm font-medium text-slate-300 mb-1">Total Spend</h2>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div className="text-3xl sm:text-4xl font-bold">
-              ₹{lifetime.totalExpenses.toLocaleString("en-IN")}
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {lifetime.payerBreakdown.slice(0, 4).map((p) => (
-                <div key={p.payer} className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs sm:text-sm">
-                  <span className="text-slate-300 mr-1.5">{p.payer}:</span>
-                  <span className="font-semibold">₹{p.total.toLocaleString("en-IN")}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <h2 className="text-sm font-medium text-slate-300 mb-1">Total Lifetime Spend</h2>
+              <div className="flex flex-col gap-4">
+                <div className="text-3xl sm:text-4xl font-bold">
+                  ₹{lifetime.totalExpenses.toLocaleString("en-IN")}
                 </div>
-              ))}
+                <div className="flex flex-wrap gap-3">
+                  {lifetime.payerBreakdown.slice(0, 4).map((p) => (
+                    <div key={p.payer} className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs sm:text-sm">
+                      <span className="text-slate-300 mr-1.5">{p.payer}:</span>
+                      <span className="font-semibold">₹{p.total.toLocaleString("en-IN")}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="sm:border-l sm:border-slate-700 sm:pl-6">
+              <h2 className="text-sm font-medium text-slate-300 mb-1">Total Lifetime Sales</h2>
+              <div className="text-3xl sm:text-4xl font-bold text-blue-400">
+                ₹{lifetime.totalSales.toLocaleString("en-IN")}
+              </div>
             </div>
           </div>
         </div>
@@ -134,13 +144,19 @@ export default function DashboardPage() {
         </div>
       ) : (
         summary && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4 mb-6">
             <SummaryCard
               title="Total Expenses"
               value={summary.totalExpenses}
               icon={IndianRupee}
               change={summary.percentChange}
               accentColor="green"
+            />
+            <SummaryCard
+              title="Total Sales"
+              value={summary.totalSales || 0}
+              icon={TrendingUp}
+              accentColor="blue"
             />
             <SummaryCard
               title="Transactions"

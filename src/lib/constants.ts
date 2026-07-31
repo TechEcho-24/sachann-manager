@@ -18,3 +18,14 @@ export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
 export const PAYERS = ["Mummy", "Papa", "Anuj", "Anurag"] as const;
 export type Payer = (typeof PAYERS)[number];
+
+export const SALES_PLATFORMS = [
+  "Amazon",
+  "Flipkart",
+  "Blinkit",
+  "Offline",
+  "Own Website",
+  "Other",
+] as const;
+
+export type SalePlatform = (typeof SALES_PLATFORMS)[number];

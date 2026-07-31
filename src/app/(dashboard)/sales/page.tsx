@@ -5,75 +5,51 @@ import Link from "next/link";
 import { Plus, Search, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CategoryBadge } from "@/components/expenses/CategoryBadge";
-import { PayerBadge } from "@/components/expenses/PayerBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { getExpenses, type PaginatedExpenses } from "@/actions/expense";
-import { EXPENSE_CATEGORIES, PAYERS } from "@/lib/constants";
-import { MonthSelector } from "@/components/dashboard/MonthSelector";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import { getSales, type PaginatedSales } from "@/actions/sale";
+import { SALES_PLATFORMS } from "@/lib/constants";
 
-export default function ExpensesPage() {
+export default function SalesPage() {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<PaginatedExpenses | null>(null);
+  const [data, setData] = useState<PaginatedSales | null>(null);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [paidBy, setPaidBy] = useState("");
+  const [platform, setPlatform] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
-  const [useDateFilter, setUseDateFilter] = useState(false); // Initially false to show all
-
-  const fetchExpenses = useCallback(async () => {
+  const fetchSales = useCallback(async () => {
     setLoading(true);
     try {
-      let startDateStr, endDateStr;
-      
-      if (useDateFilter) {
-        const startDate = startOfMonth(new Date(year, month - 1));
-        const endDate = endOfMonth(new Date(year, month - 1));
-        startDateStr = format(startDate, "yyyy-MM-dd");
-        endDateStr = format(endDate, "yyyy-MM-dd");
-      }
-
-      const result = await getExpenses({
+      const result = await getSales({
         search: search || undefined,
-        category: category || undefined,
-        paidBy: paidBy || undefined,
-        startDate: startDateStr,
-        endDate: endDateStr,
+        platform: platform || undefined,
         isArchived: showArchived,
         page,
         limit: 20,
       });
       setData(result);
     } catch (error) {
-      console.error("Failed to fetch expenses:", error);
+      console.error("Failed to fetch sales:", error);
     } finally {
       setLoading(false);
     }
-  }, [search, category, paidBy, showArchived, page]);
+  }, [search, platform, showArchived, page]);
 
   useEffect(() => {
-    const debounce = setTimeout(fetchExpenses, 300);
+    const debounce = setTimeout(fetchSales, 300);
     return () => clearTimeout(debounce);
-  }, [fetchExpenses]);
+  }, [fetchSales]);
 
   function clearFilters() {
     setSearch("");
-    setCategory("");
-    setPaidBy("");
+    setPlatform("");
     setShowArchived(false);
-    setUseDateFilter(false);
     setPage(1);
   }
 
-  const hasActiveFilters = search || category || paidBy || showArchived || useDateFilter;
+  const hasActiveFilters = search || platform || showArchived;
 
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto">
@@ -81,16 +57,16 @@ export default function ExpensesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold text-foreground">
-            Expenses
+            Sales
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {data ? `${data.total} expense${data.total !== 1 ? "s" : ""}` : "Loading..."}
+            {data ? `${data.total} sale${data.total !== 1 ? "s" : ""}` : "Loading..."}
           </p>
         </div>
-        <Link href="/expenses/new">
-          <Button className="h-10 rounded-xl bg-brand-green hover:bg-brand-green-light text-white gap-2">
+        <Link href="/sales/new">
+          <Button className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white gap-2">
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Add Expense</span>
+            <span className="hidden sm:inline">Add Sale</span>
           </Button>
         </Link>
       </div>
@@ -105,7 +81,7 @@ export default function ExpensesPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search expenses..."
+            placeholder="Search sales..."
             className="h-10 rounded-xl pl-9"
           />
         </div>
@@ -115,7 +91,7 @@ export default function ExpensesPage() {
           onClick={() => setShowFilters(!showFilters)}
           className={cn(
             "h-10 w-10 rounded-xl flex-shrink-0",
-            hasActiveFilters && "border-brand-green text-brand-green"
+            hasActiveFilters && "border-blue-600 text-blue-600"
           )}
         >
           <Filter className="w-4 h-4" />
@@ -130,7 +106,7 @@ export default function ExpensesPage() {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-brand-green hover:underline"
+                className="text-xs text-blue-600 hover:underline"
               >
                 Clear all
               </button>
@@ -138,79 +114,27 @@ export default function ExpensesPage() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Category</p>
+            <p className="text-xs text-muted-foreground">Platform</p>
             <div className="flex flex-wrap gap-1.5">
-              {EXPENSE_CATEGORIES.map((cat) => (
+              {SALES_PLATFORMS.map((plat) => (
                 <button
-                  key={cat}
+                  key={plat}
                   onClick={() => {
-                    setCategory(category === cat ? "" : cat);
+                    setPlatform(platform === plat ? "" : plat);
                     setPage(1);
                   }}
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-xs font-medium border transition-all",
-                    category === cat
-                      ? "border-brand-green bg-brand-green text-white"
-                      : "border-border text-muted-foreground hover:border-brand-green/40"
+                    platform === plat
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : "border-border text-muted-foreground hover:border-blue-600/40"
                   )}
                 >
-                  {cat}
+                  {plat}
                 </button>
               ))}
             </div>
           </div>
-
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Paid By</p>
-            <div className="flex flex-wrap gap-1.5">
-              {PAYERS.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => {
-                    setPaidBy(paidBy === p ? "" : p);
-                    setPage(1);
-                  }}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-xs font-medium border transition-all",
-                    paidBy === p
-                      ? "border-brand-green bg-brand-green text-white"
-                      : "border-border text-muted-foreground hover:border-brand-green/40"
-                  )}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <label className="flex items-center gap-2 cursor-pointer mb-2">
-            <input
-              type="checkbox"
-              checked={useDateFilter}
-              onChange={(e) => {
-                setUseDateFilter(e.target.checked);
-                setPage(1);
-              }}
-              className="rounded accent-brand-green"
-            />
-            <span className="text-xs text-muted-foreground">
-              Filter by Month
-            </span>
-          </label>
-
-          {useDateFilter && (
-            <div className="pt-1">
-              <MonthSelector
-                month={month}
-                year={year}
-                onChange={(m, y) => {
-                  setMonth(m);
-                  setYear(y);
-                  setPage(1);
-                }}
-              />
-            </div>
-          )}
 
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -220,10 +144,10 @@ export default function ExpensesPage() {
                 setShowArchived(e.target.checked);
                 setPage(1);
               }}
-              className="rounded accent-brand-green"
+              className="rounded accent-blue-600"
             />
             <span className="text-xs text-muted-foreground">
-              Show archived expenses
+              Show archived sales
             </span>
           </label>
         </div>
@@ -232,18 +156,10 @@ export default function ExpensesPage() {
       {/* Active filter tags */}
       {hasActiveFilters && !showFilters && (
         <div className="flex flex-wrap items-center gap-1.5 mb-4">
-          {category && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-green/10 text-brand-green text-xs font-medium">
-              {category}
-              <button onClick={() => setCategory("")}>
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          )}
-          {paidBy && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-terracotta/10 text-brand-terracotta text-xs font-medium">
-              {paidBy}
-              <button onClick={() => setPaidBy("")}>
+          {platform && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-600/10 text-blue-600 text-xs font-medium">
+              {platform}
+              <button onClick={() => setPlatform("")}>
                 <X className="w-3 h-3" />
               </button>
             </span>
@@ -251,14 +167,14 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* Expense List */}
+      {/* Sales List */}
       {loading ? (
         <div className="space-y-3">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-2xl" />
           ))}
         </div>
-      ) : data && data.expenses.length > 0 ? (
+      ) : data && data.sales.length > 0 ? (
         <>
           {/* Desktop Table */}
           <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden">
@@ -266,54 +182,41 @@ export default function ExpensesPage() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">
-                    Title
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">
                     Amount
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">
-                    Category
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">
-                    Paid By
+                    Platform
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">
                     Date
                   </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">
+                    Notes
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {data.expenses.map((expense) => (
+                {data.sales.map((sale) => (
                   <tr
-                    key={expense._id}
+                    key={sale._id}
                     className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors"
                   >
                     <td className="px-5 py-3.5">
                       <Link
-                        href={`/expenses/${expense._id}`}
-                        className="text-sm font-medium text-foreground hover:text-brand-green transition-colors"
+                        href={`/sales/${sale._id}/edit`}
+                        className="text-sm font-semibold text-foreground hover:text-blue-600 transition-colors"
                       >
-                        {expense.title}
+                        {formatCurrency(sale.amount)}
                       </Link>
-                      {expense.vendor && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {expense.vendor}
-                        </p>
-                      )}
                     </td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(expense.amount)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <CategoryBadge category={expense.category} />
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <PayerBadge payer={expense.paidBy} />
+                    <td className="px-5 py-3.5 text-sm font-medium">
+                      {sale.platform}
                     </td>
                     <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                      {formatDate(expense.date)}
+                      {formatDate(sale.date)}
+                    </td>
+                    <td className="px-5 py-3.5 text-sm text-muted-foreground max-w-[200px] truncate">
+                      {sale.notes || "-"}
                     </td>
                   </tr>
                 ))}
@@ -323,30 +226,30 @@ export default function ExpensesPage() {
 
           {/* Mobile Cards */}
           <div className="lg:hidden space-y-2">
-            {data.expenses.map((expense) => (
+            {data.sales.map((sale) => (
               <Link
-                key={expense._id}
-                href={`/expenses/${expense._id}`}
+                key={sale._id}
+                href={`/sales/${sale._id}/edit`}
                 className="block bg-card rounded-2xl border border-border p-4 card-hover"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground truncate">
-                      {expense.title}
+                      {sale.platform}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatDate(expense.date)}
-                      {expense.vendor && ` • ${expense.vendor}`}
+                      {formatDate(sale.date)}
                     </p>
                   </div>
-                  <span className="text-sm font-bold text-foreground ml-3">
-                    {formatCurrency(expense.amount)}
+                  <span className="text-sm font-bold text-foreground ml-3 text-blue-600">
+                    {formatCurrency(sale.amount)}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CategoryBadge category={expense.category} />
-                  <PayerBadge payer={expense.paidBy} />
-                </div>
+                {sale.notes && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {sale.notes}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
@@ -385,22 +288,22 @@ export default function ExpensesPage() {
             <Search className="w-7 h-7 text-muted-foreground" />
           </div>
           <h3 className="text-base font-semibold text-foreground mb-1">
-            {hasActiveFilters ? "No matching expenses" : "No expenses yet"}
+            {hasActiveFilters ? "No matching sales" : "No sales yet"}
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
             {hasActiveFilters
               ? "Try adjusting your search or filters"
-              : "Start tracking your expenses by adding your first one"}
+              : "Start tracking your sales by adding your first one"}
           </p>
           {hasActiveFilters ? (
             <Button variant="outline" onClick={clearFilters} className="rounded-xl">
               Clear filters
             </Button>
           ) : (
-            <Link href="/expenses/new">
-              <Button className="rounded-xl bg-brand-green hover:bg-brand-green-light text-white gap-2">
+            <Link href="/sales/new">
+              <Button className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white gap-2">
                 <Plus className="w-4 h-4" />
-                Add Expense
+                Add Sale
               </Button>
             </Link>
           )}

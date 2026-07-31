@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Users,
+  TrendingUp,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -35,8 +36,13 @@ const navItems = [
     icon: Receipt,
   },
   {
-    label: "Reports",
-    href: "/reports",
+    label: "Sales",
+    href: "/sales",
+    icon: TrendingUp,
+  },
+  {
+    label: "Sales Reports",
+    href: "/sales/reports",
     icon: FileBarChart,
   },
   {
@@ -230,7 +236,7 @@ export default function DashboardLayout({
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-md border-t border-border">
         <div className="flex items-center justify-around py-2 px-2">
-          {[navItems[0], navItems[1], navItems[2], navItems[6]].map((item) => (
+          {[navItems[0], navItems[1], navItems[2], navItems[3], navItems[7]].map((item) => (
             <Link
               key={item.href}
               href={item.href}

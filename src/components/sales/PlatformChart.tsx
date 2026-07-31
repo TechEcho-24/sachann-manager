@@ -9,13 +9,13 @@ import {
   Tooltip,
 } from "recharts";
 import { formatCurrency, CHART_COLORS } from "@/lib/utils";
-import type { CategoryBreakdown } from "@/actions/dashboard";
+import type { SalesReport } from "@/actions/sale";
 
-interface CategoryChartProps {
-  data: CategoryBreakdown[];
+interface PlatformChartProps {
+  data: SalesReport["platformBreakdown"];
 }
 
-export function CategoryChart({ data }: CategoryChartProps) {
+export function PlatformChart({ data }: PlatformChartProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
   if (data.length === 0) {
     return (
       <div className="h-[260px] flex items-center justify-center text-muted-foreground text-sm">
-        No expense data for this month
+        No sales data for this month
       </div>
     );
   }
@@ -47,7 +47,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
               outerRadius={85}
               paddingAngle={3}
               dataKey="total"
-              nameKey="category"
+              nameKey="platform"
               strokeWidth={0}
             >
               {data.map((_, index) => (
@@ -74,7 +74,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
       <div className="flex-1 grid grid-cols-1 gap-1.5 w-full">
         {data.map((item, index) => (
           <div
-            key={item.category}
+            key={item.platform}
             className="flex items-center justify-between py-1"
           >
             <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
                 }}
               />
               <span className="text-xs text-muted-foreground truncate">
-                {item.category}
+                {item.platform}
               </span>
             </div>
             <span className="text-xs font-medium text-foreground ml-2">

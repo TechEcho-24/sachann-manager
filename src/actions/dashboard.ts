@@ -3,10 +3,12 @@
 import connectDB from "@/lib/db";
 import Expense from "@/models/Expense";
 import Budget from "@/models/Budget";
+import Sale from "@/models/Sale";
 import { startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 export interface DashboardSummary {
   totalExpenses: number;
+  totalSales: number;
   transactionCount: number;
   averagePerDay: number;
   budgetAmount: number;
@@ -89,12 +91,27 @@ export async function getDashboardData(
       },
     ]),
     Budget.findOne({ month, year }),
+    Sale.aggregate([
+      {
+        $match: {
+          date: { $gte: startDate, $lte: endDate },
+          isArchived: false,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
+    ]),
   ]);
 
   const totalExpenses = currentMonthAgg[0]?.total || 0;
   const transactionCount = currentMonthAgg[0]?.count || 0;
   const previousMonthTotal = prevMonthAgg[0]?.total || 0;
   const budgetAmount = budget?.amount || 0;
+  const totalSales = currentMonthAgg[3]?.[0]?.total || 0;
 
   const percentChange =
     previousMonthTotal === 0
@@ -105,6 +122,7 @@ export async function getDashboardData(
 
   return {
     totalExpenses,
+    totalSales,
     transactionCount,
     averagePerDay: transactionCount > 0 ? totalExpenses / daysInMonth : 0,
     budgetAmount,
@@ -251,6 +269,7 @@ export async function getRecentExpenses(
 
 export interface LifetimeStats {
   totalExpenses: number;
+  totalSales: number;
   payerBreakdown: { payer: string; total: number }[];
   categoryBreakdown: { category: string; total: number }[];
 }
@@ -258,7 +277,7 @@ export interface LifetimeStats {
 export async function getLifetimeStats(): Promise<LifetimeStats> {
   await connectDB();
 
-  const [payerResult, categoryResult] = await Promise.all([
+  const [payerResult, categoryResult, salesResult] = await Promise.all([
     Expense.aggregate([
       { $match: { isArchived: false } },
       { $group: { _id: "$paidBy", total: { $sum: "$amount" } } },
@@ -266,7 +285,11 @@ export async function getLifetimeStats(): Promise<LifetimeStats> {
     Expense.aggregate([
       { $match: { isArchived: false } },
       { $group: { _id: "$category", total: { $sum: "$amount" } } },
-    ])
+    ]),
+    Sale.aggregate([
+      { $match: { isArchived: false } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]),
   ]);
 
   const totalExpenses = payerResult.reduce((sum, item) => sum + item.total, 0);
@@ -281,8 +304,11 @@ export async function getLifetimeStats(): Promise<LifetimeStats> {
     total: item.total,
   })).sort((a, b) => b.total - a.total);
 
+  const totalSales = salesResult[0]?.total || 0;
+
   return {
     totalExpenses,
+    totalSales,
     payerBreakdown,
     categoryBreakdown,
   };

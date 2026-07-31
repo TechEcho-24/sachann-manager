@@ -394,12 +394,36 @@ export function ChatInterface({ initialGreeting, dailyMotivation, userName }: Ch
                   </div>
                 )}
 
+                {/* Sale summary card */}
+                {!isUser && msg.expenseSummary && (msg.expenseSummary as any).type === "sale_confirmation" && (
+                  <div className="bg-white dark:bg-[#1F2C33] rounded-2xl rounded-tl-sm shadow-sm border-l-4 border-blue-500 overflow-hidden mb-1 max-w-xs">
+                    <div className="bg-blue-500 px-4 py-2">
+                      <p className="text-xs font-bold text-white uppercase tracking-wider">💰 Kamai Summary</p>
+                    </div>
+                    <div className="px-4 py-3 space-y-2">
+                      {[
+                        ["Amount", `₹${((msg.expenseSummary as any).amount || 0).toLocaleString("en-IN")}`],
+                        ["Platform", (msg.expenseSummary as any).platform],
+                        ["Date", (msg.expenseSummary as any).dateMode === "current" ? "Abhi (server time)" : "Custom"],
+                        ["Notes", (msg.expenseSummary as any).notes],
+                      ]
+                        .filter(([, v]) => v)
+                        .map(([label, value]) => (
+                          <div key={label} className="flex justify-between gap-4 text-sm">
+                            <span className="text-muted-foreground text-xs">{label}</span>
+                            <span className="font-medium text-foreground text-xs text-right max-w-[160px] truncate">{value}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Saved confirmation */}
                 {!isUser && msg.isExpenseSaved && (
                   <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-2xl px-4 py-2 mb-1">
                     <span className="text-lg">✅</span>
                     <span className="text-sm font-semibold text-green-800 dark:text-green-300">
-                      Kharcha save ho gaya!
+                      Entry save ho gayi!
                     </span>
                   </div>
                 )}

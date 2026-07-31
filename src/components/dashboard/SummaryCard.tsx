@@ -11,7 +11,7 @@ interface SummaryCardProps {
   changeLabel?: string;
   prefix?: string;
   isCurrency?: boolean;
-  accentColor?: "green" | "terracotta" | "mustard" | "muted";
+  accentColor?: "green" | "terracotta" | "mustard" | "muted" | "blue";
 }
 
 export function SummaryCard({
@@ -28,6 +28,7 @@ export function SummaryCard({
     terracotta: "bg-brand-terracotta/8 text-brand-terracotta",
     mustard: "bg-brand-mustard/8 text-amber-700",
     muted: "bg-muted text-muted-foreground",
+    blue: "bg-blue-600/10 text-blue-600",
   };
 
   return (
