@@ -215,12 +215,46 @@ export function TasksClient({ canCreate, userRole }: TasksClientProps) {
           <p className="text-xs mt-1">Try adjusting your filters or search query.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="space-y-3">
-            {data.tasks.map((task) => (
-              <TaskRow key={task._id} task={task} onStatusChange={fetchTasks} />
-            ))}
-          </div>
+        <div className="space-y-6">
+          {/* Active Tasks Section */}
+          {(status === "" || status !== "done") && (
+            <div className="space-y-3">
+              <h2 className="text-base font-bold text-foreground">Active Tasks</h2>
+              {data.tasks.filter((t) => t.status !== "done" && t.status !== "cancelled").length === 0 ? (
+                <div className="bg-card rounded-2xl border border-border p-6 text-center text-xs text-muted-foreground shadow-sm">
+                  No active tasks found.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {data.tasks
+                    .filter((t) => t.status !== "done" && t.status !== "cancelled")
+                    .map((task) => (
+                      <TaskRow key={task._id} task={task} onStatusChange={fetchTasks} />
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Completed Tasks Section */}
+          {(status === "" || status === "done") && (
+            <div className="space-y-3 pt-2">
+              <h2 className="text-base font-bold text-foreground">Completed Tasks</h2>
+              {data.tasks.filter((t) => t.status === "done").length === 0 ? (
+                <div className="bg-card rounded-2xl border border-border p-6 text-center text-xs text-muted-foreground shadow-sm">
+                  No completed tasks found.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {data.tasks
+                    .filter((t) => t.status === "done")
+                    .map((task) => (
+                      <TaskRow key={task._id} task={task} onStatusChange={fetchTasks} />
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Pagination */}
           {data.totalPages > 1 && (
