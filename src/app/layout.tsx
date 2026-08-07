@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
+import { PushNotificationManager } from "@/components/PushNotificationManager";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -49,6 +50,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ServiceWorkerRegistrar />
+        <PushNotificationManager />
         {children}
         <Toaster
           position="top-right"

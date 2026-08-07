@@ -100,3 +100,70 @@ self.addEventListener("message", (event) => {
     self.skipWaiting();
   }
 });
+
+// ── Push: Handle background push notifications ───────────────────────────────
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  try {
+    const payload = event.data.json();
+    const title = payload.title || "Sachann Manager";
+    const options = {
+      body: payload.body || "New update received.",
+      icon: "/logo.png",
+      badge: "/favicon.png",
+      data: {
+        url: payload.url || "/dashboard",
+      },
+    };
+
+    // Display background popup notification
+    event.waitUntil(
+      self.registration.showNotification(title, options)
+    );
+
+    // Update app icon badging if supported
+    if (self.navigator && "setAppBadge" in self.navigator) {
+      event.waitUntil(
+        self.navigator.setAppBadge().catch(() => {})
+      );
+    }
+
+    // Broadcast message to all active client tabs to refresh their unread notifications counts
+    event.waitUntil(
+      self.clients.matchAll({ type: "window" }).then((clientsList) => {
+        clientsList.forEach((client) => {
+          client.postMessage({
+            type: "PUSH_RECEIVED",
+            url: payload.url,
+          });
+        });
+      })
+    );
+  } catch (err) {
+    console.error("Error processing push event:", err);
+  }
+});
+
+// ── Notification Click: Navigate to url on popup click ────────────────────────
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/dashboard";
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientsList) => {
+      // If a tab is already open, focus it and navigate
+      for (const client of clientsList) {
+        if (client.url.indexOf(self.location.origin) === 0 && "focus" in client) {
+          return client.focus().then((focusedClient) => {
+            return focusedClient.navigate(targetUrl);
+          });
+        }
+      }
+      // If no tab is open, open a new window
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
+  );
+});

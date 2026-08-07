@@ -11,6 +11,7 @@ import { taskSchema } from "@/lib/validators";
 import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS, type TaskStatus, type TaskPriority } from "@/lib/constants";
 import mongoose from "mongoose";
 import type { UserRole } from "@/lib/roles";
+import { sendPushNotification } from "@/actions/push";
 
 // --- Serialized Types ---
 
@@ -120,6 +121,14 @@ async function createNotification(data: {
       message: data.message,
       relatedTaskId: data.relatedTaskId ? new mongoose.Types.ObjectId(data.relatedTaskId) : undefined,
     });
+
+    // Send real-time Web Push notification to registered devices
+    const url = data.relatedTaskId ? `/tasks/${data.relatedTaskId}` : "/dashboard";
+    sendPushNotification(data.userId, {
+      title: data.title,
+      body: data.message,
+      url,
+    }).catch((err) => console.error("Web Push trigger failed:", err));
   } catch (e) {
     console.error("Failed to create notification:", e);
   }

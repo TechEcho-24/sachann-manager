@@ -10,6 +10,13 @@ export interface IUser extends Document {
   isActive: boolean;
   mustChangePassword: boolean;
   lastLogin?: Date;
+  pushSubscriptions?: {
+    endpoint: string;
+    keys: {
+      p256dh: string;
+      auth: string;
+    };
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,6 +60,15 @@ const UserSchema = new Schema<IUser>(
     lastLogin: {
       type: Date,
     },
+    pushSubscriptions: [
+      {
+        endpoint: { type: String, required: true },
+        keys: {
+          p256dh: { type: String, required: true },
+          auth: { type: String, required: true },
+        },
+      },
+    ],
   },
   {
     timestamps: true,
