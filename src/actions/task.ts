@@ -644,3 +644,50 @@ export async function getTeamProgress(): Promise<{
 
   return { employees: result.sort((a, b) => b.total - a.total) };
 }
+
+export async function updateTaskStatus(id: string, newStatus: TaskStatus) {
+  const guard = await requireRole(["admin_manager", "manager", "employee"]);
+  if ("error" in guard) return { error: guard.error };
+
+  await connectDB();
+
+  const task = await Task.findById(id);
+  if (!task || task.isDeleted) return { error: "Task not found." };
+
+  if (guard.user.role === "employee" && task.assignedTo.toString() !== guard.user.userId) {
+    return { error: "You can only update status of your own tasks." };
+  }
+
+  const oldStatus = task.status;
+  task.status = newStatus;
+
+  if (newStatus === "done" && oldStatus !== "done") {
+    task.completedAt = new Date();
+  } else if (newStatus !== "done") {
+    task.completedAt = undefined;
+  }
+
+  await task.save();
+
+  await logActivity({
+    taskId: id,
+    action: "status_changed",
+    previousValue: TASK_STATUS_LABELS[oldStatus as TaskStatus],
+    newValue: TASK_STATUS_LABELS[newStatus],
+    performedBy: guard.user.userId,
+  });
+
+  // Notify managers about status change
+  const managers = await User.find({ role: { $in: ["admin_manager", "manager"] }, isActive: true }).select("_id").lean();
+  for (const mgr of managers) {
+    await createNotification({
+      userId: mgr._id.toString(),
+      type: "status_changed",
+      title: "Task Status Updated",
+      message: `"${task.title}" status changed from ${TASK_STATUS_LABELS[oldStatus as TaskStatus]} to ${TASK_STATUS_LABELS[newStatus]} by ${guard.user.name}.`,
+      relatedTaskId: id,
+    });
+  }
+
+  return { success: true };
+}

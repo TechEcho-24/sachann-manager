@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ListTodo, CheckCircle2, Clock, AlertTriangle, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TaskCard } from "@/components/tasks/TaskCard";
+import { TaskRow } from "@/components/tasks/TaskRow";
 import { TaskSummaryCards } from "@/components/dashboard/TaskSummaryCards";
 import { getTasks, getTaskStats, type SerializedTask, type TaskStats } from "@/actions/task";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,7 +24,7 @@ export function EmployeeTaskDashboard({ userId, userName }: EmployeeTaskDashboar
     try {
       const [statsData, tasksData] = await Promise.all([
         getTaskStats(userId),
-        getTasks({ assignedTo: userId, limit: 6 }),
+        getTasks({ assignedTo: userId, limit: 50 }),
       ]);
       setStats(statsData);
       setTasks(tasksData.tasks);
@@ -38,6 +38,10 @@ export function EmployeeTaskDashboard({ userId, userName }: EmployeeTaskDashboar
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Separate active and completed tasks
+  const activeTasks = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
+  const completedTasks = tasks.filter((t) => t.status === "done");
 
   return (
     <div className="space-y-6">
@@ -68,31 +72,58 @@ export function EmployeeTaskDashboard({ userId, userName }: EmployeeTaskDashboar
         stats && <TaskSummaryCards stats={stats} title="My Task Summary" />
       )}
 
-      {/* Active Tasks Grid */}
+      {/* Active Tasks list */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">My Active Tasks</h2>
+          <h2 className="text-base font-bold text-foreground">My Active Tasks</h2>
           <Link href="/tasks" className="text-xs font-medium text-brand-green hover:underline">
             View all
           </Link>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-[140px] rounded-2xl" />
+              <Skeleton key={i} className="h-16 rounded-xl" />
             ))}
           </div>
-        ) : tasks.length === 0 ? (
-          <div className="bg-card rounded-2xl border border-border p-8 text-center text-muted-foreground">
+        ) : activeTasks.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border p-8 text-center text-muted-foreground shadow-sm">
             <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-emerald-500/50" />
-            <p className="text-sm font-medium">No tasks assigned right now!</p>
-            <p className="text-xs mt-0.5">Enjoy your day or check back later.</p>
+            <p className="text-sm font-medium">No active tasks right now!</p>
+            <p className="text-xs mt-0.5">Enjoy your day or check completed tasks below.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasks.map((t) => (
-              <TaskCard key={t._id} task={t} isEmployeeView />
+          <div className="space-y-2.5">
+            {activeTasks.map((t) => (
+              <TaskRow key={t._id} task={t} onStatusChange={loadData} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Completed Tasks list */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-foreground">Completed Tasks</h2>
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(2)].map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-xl" />
+            ))}
+          </div>
+        ) : completedTasks.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border p-8 text-center text-muted-foreground shadow-sm">
+            <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm font-medium">No completed tasks yet.</p>
+            <p className="text-xs mt-0.5">Your finished tasks will appear here.</p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {completedTasks.map((t) => (
+              <TaskRow key={t._id} task={t} onStatusChange={loadData} />
             ))}
           </div>
         )}

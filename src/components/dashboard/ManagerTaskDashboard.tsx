@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Plus, Users, CheckSquare, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TaskCard } from "@/components/tasks/TaskCard";
+import { TaskRow } from "@/components/tasks/TaskRow";
 import { TaskSummaryCards } from "@/components/dashboard/TaskSummaryCards";
 import { TeamProgress } from "@/components/dashboard/TeamProgress";
 import {
@@ -105,9 +105,9 @@ export function ManagerTaskDashboard({ userName }: ManagerTaskDashboardProps) {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-[140px] rounded-2xl" />
+                <Skeleton key={i} className="h-16 rounded-xl" />
               ))}
             </div>
           ) : tasks.length === 0 ? (
@@ -117,9 +117,9 @@ export function ManagerTaskDashboard({ userName }: ManagerTaskDashboardProps) {
               <p className="text-xs mt-0.5">Click "New Task" above to assign work.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2.5">
               {tasks.map((t) => (
-                <TaskCard key={t._id} task={t} />
+                <TaskRow key={t._id} task={t} onStatusChange={loadData} />
               ))}
             </div>
           )}

@@ -1,8 +1,18 @@
 import { TaskForm } from "@/components/tasks/TaskForm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth-guard";
+import { canCreateTasks } from "@/lib/roles";
+import { redirect } from "next/navigation";
 
-export default function NewTaskPage() {
+export default async function NewTaskPage() {
+  const currentUser = await getCurrentUser();
+  const role = currentUser?.role || "employee";
+
+  if (!canCreateTasks(role)) {
+    redirect("/tasks");
+  }
+
   return (
     <div className="p-4 lg:p-8 max-w-3xl mx-auto">
       <div className="mb-6 space-y-4">
