@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,20 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sanitize callbackUrl so it ONLY accepts relative paths, preventing external / localhost redirects
+  const callbackUrlParam = searchParams.get("callbackUrl");
+  const targetUrl =
+    callbackUrlParam &&
+    callbackUrlParam.startsWith("/") &&
+    !callbackUrlParam.startsWith("//")
+      ? callbackUrlParam
+      : "/dashboard";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,7 +44,7 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
-        callbackUrl: "/dashboard",
+        callbackUrl: targetUrl,
       });
 
       if (res?.error) {
@@ -44,11 +54,11 @@ export default function LoginPage() {
       }
 
       toast.success("Welcome back!");
-      window.location.href = res?.url || "/dashboard";
+      // Always redirect to relative path so it never points to localhost in production
+      window.location.replace(targetUrl);
     } catch (err: any) {
       console.error("Login error:", err);
-      // Even if catch is hit on redirect, redirect to dashboard
-      window.location.href = "/dashboard";
+      window.location.replace(targetUrl);
     }
   }
 
@@ -153,5 +163,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
