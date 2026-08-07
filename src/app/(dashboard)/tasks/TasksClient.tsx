@@ -16,6 +16,7 @@ import {
   TASK_PRIORITIES,
   TASK_PRIORITY_LABELS,
 } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 interface TasksClientProps {
   canCreate: boolean;
@@ -100,37 +101,43 @@ export function TasksClient({ canCreate, userRole }: TasksClientProps) {
       <div className="bg-card p-3 sm:p-4 rounded-2xl border border-border shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
           {/* Search Input */}
-          <div className="relative lg:col-span-4">
+          <div className={cn(
+            userRole === "employee" ? "lg:col-span-6" : "lg:col-span-4"
+          )}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search tasks..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-10 rounded-xl pl-9 text-xs sm:text-sm"
+              className="h-10 rounded-xl pl-9 text-xs sm:text-sm w-full"
             />
           </div>
 
-          {/* Team Member Dropdown */}
-          <div className="lg:col-span-3">
-            <select
-              value={assignedTo}
-              onChange={(e) => {
-                setAssignedTo(e.target.value);
-                setPage(1);
-              }}
-              className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand-green/20"
-            >
-              <option value="">All Team Members</option>
-              {users.map((u) => (
-                <option key={u._id} value={u._id}>
-                  {u.name} {u.role ? `(${ROLE_LABELS[u.role] || u.role})` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Team Member Dropdown (Hidden for employees) */}
+          {userRole !== "employee" && (
+            <div className="lg:col-span-3">
+              <select
+                value={assignedTo}
+                onChange={(e) => {
+                  setAssignedTo(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+              >
+                <option value="">All Team Members</option>
+                {users.map((u) => (
+                  <option key={u._id} value={u._id}>
+                    {u.name} {u.role ? `(${ROLE_LABELS[u.role] || u.role})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Status Dropdown */}
-          <div className="lg:col-span-2">
+          <div className={cn(
+            userRole === "employee" ? "lg:col-span-3" : "lg:col-span-2"
+          )}>
             <select
               value={status}
               onChange={(e) => {
@@ -167,26 +174,29 @@ export function TasksClient({ canCreate, userRole }: TasksClientProps) {
             </select>
           </div>
 
-          {/* Clear Filters Button */}
+          {/* Clear Filters Button (Always in DOM with opacity-0 to prevent layout shifting) */}
           <div className="lg:col-span-1 flex justify-end">
-            {search || status || priority || assignedTo ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearch("");
-                  setStatus("");
-                  setPriority("");
-                  setAssignedTo("");
-                  setPage(1);
-                }}
-                className="h-10 px-2 rounded-xl text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 w-full lg:w-auto font-medium"
-                title="Clear all filters"
-              >
-                <X className="w-3.5 h-3.5 mr-1" />
-                Clear
-              </Button>
-            ) : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearch("");
+                setStatus("");
+                setPriority("");
+                setAssignedTo("");
+                setPage(1);
+              }}
+              className={cn(
+                "h-10 px-2 rounded-xl text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 w-full lg:w-auto font-medium transition-all duration-150",
+                (search || status || priority || assignedTo)
+                  ? "opacity-100 pointer-events-auto"
+                  : "opacity-0 pointer-events-none select-none"
+              )}
+              title="Clear all filters"
+            >
+              <X className="w-3.5 h-3.5 mr-1" />
+              Clear
+            </Button>
           </div>
         </div>
       </div>
