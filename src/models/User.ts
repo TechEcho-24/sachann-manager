@@ -1,10 +1,15 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { USER_ROLES, type UserRole } from "@/lib/roles";
 
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   email: string;
   name: string;
   password: string;
+  role: UserRole;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,13 +33,40 @@ const UserSchema = new Schema<IUser>(
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
     },
+    role: {
+      type: String,
+      required: [true, "Role is required"],
+      enum: {
+        values: USER_ROLES,
+        message: "{VALUE} is not a valid role",
+      },
+      default: "employee",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    lastLogin: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const User: Model<IUser> =
-  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+// Indexes
+UserSchema.index({ role: 1 });
+UserSchema.index({ isActive: 1 });
+
+if (mongoose.models && mongoose.models.User) {
+  delete (mongoose.models as any).User;
+}
+
+const User: Model<IUser> = mongoose.model<IUser>("User", UserSchema);
 
 export default User;

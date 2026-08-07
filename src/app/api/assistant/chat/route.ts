@@ -562,6 +562,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const userRole = session.user.role || "employee";
+    if (userRole !== "admin" && userRole !== "admin_manager") {
+      return NextResponse.json(
+        {
+          error: "Forbidden",
+          message: "Assistant chatbot is only available for financial management accounts.",
+        },
+        { status: 403 }
+      );
+    }
+
     const userId = session.user.id;
 
     // Rate limit
