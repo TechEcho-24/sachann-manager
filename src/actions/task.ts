@@ -618,9 +618,8 @@ export async function getTeamProgress(): Promise<{
   const now = new Date();
 
   const employees = await User.find({
-    role: { $in: ["employee", "manager"] },
     isActive: true,
-  }).select("name").lean();
+  }).select("name role").lean();
 
   const result = [];
 

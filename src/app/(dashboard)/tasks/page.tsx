@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { getTasks, type PaginatedTasks } from "@/actions/task";
 import { getAssignableUsers } from "@/actions/user";
+import { ROLE_LABELS, type UserRole } from "@/lib/roles";
 import {
   TASK_STATUSES,
   TASK_STATUS_LABELS,
@@ -25,7 +26,7 @@ export default function TasksPage() {
   const [priority, setPriority] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [page, setPage] = useState(1);
-  const [users, setUsers] = useState<{ _id: string; name: string }[]>([]);
+  const [users, setUsers] = useState<{ _id: string; name: string; role?: UserRole }[]>([]);
 
   useEffect(() => {
     async function loadTeam() {
@@ -114,7 +115,7 @@ export default function TasksPage() {
               <option value="">All Team Members</option>
               {users.map((u) => (
                 <option key={u._id} value={u._id}>
-                  {u.name}
+                  {u.name} {u.role ? `(${ROLE_LABELS[u.role] || u.role})` : ""}
                 </option>
               ))}
             </select>

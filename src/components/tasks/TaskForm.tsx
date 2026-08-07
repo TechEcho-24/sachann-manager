@@ -17,6 +17,7 @@ import {
 } from "@/lib/constants";
 import { createTask, updateTask, type SerializedTask } from "@/actions/task";
 import { getAssignableUsers } from "@/actions/user";
+import { ROLE_LABELS, type UserRole } from "@/lib/roles";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -141,7 +142,7 @@ export function TaskForm({ task }: TaskFormProps) {
               <option value="" disabled>Select team member</option>
               {assignableUsers.map((u) => (
                 <option key={u._id} value={u._id}>
-                  {u.name} ({u.role})
+                  {u.name} ({ROLE_LABELS[u.role as UserRole] || u.role})
                 </option>
               ))}
             </select>

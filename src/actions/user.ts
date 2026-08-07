@@ -275,7 +275,6 @@ export async function getAssignableUsers(): Promise<{ _id: string; name: string;
 
   const users = await User.find({
     isActive: true,
-    role: { $in: ["employee", "manager"] },
   })
     .select("name email role")
     .sort({ name: 1 })
