@@ -6,7 +6,9 @@ import type { NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const sessionToken =
     request.cookies.get("authjs.session-token")?.value ||
-    request.cookies.get("__Secure-authjs.session-token")?.value;
+    request.cookies.get("__Secure-authjs.session-token")?.value ||
+    request.cookies.get("next-auth.session-token")?.value ||
+    request.cookies.get("__Secure-next-auth.session-token")?.value;
 
   if (!sessionToken) {
     const loginUrl = new URL("/login", request.url);
@@ -24,5 +26,14 @@ export const config = {
     "/reports/:path*",
     "/budget/:path*",
     "/settings/:path*",
+    "/sales/:path*",
+    "/balances/:path*",
+    "/total/:path*",
+    "/assistant/:path*",
+    "/tasks/:path*",
+    "/team/:path*",
+    "/users/:path*",
+    "/notifications/:path*",
+    "/change-password/:path*",
   ],
 };

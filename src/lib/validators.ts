@@ -75,3 +75,68 @@ export const saleSchema = z.object({
 });
 
 export type SaleInput = z.infer<typeof saleSchema>;
+
+// User management validators
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+export const createUserSchema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters").max(100),
+    email: z.string().email("Please enter a valid email address"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        passwordRegex,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+      ),
+    confirmPassword: z.string().min(1, "Please confirm the password"),
+    role: z.enum(["admin", "admin_manager", "manager", "employee"] as const, {
+      message: "Please select a valid role",
+    }),
+    isActive: z.boolean().optional().default(true),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export const updateUserSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  email: z.string().email("Please enter a valid email address"),
+  role: z.enum(["admin", "admin_manager", "manager", "employee"] as const, {
+    message: "Please select a valid role",
+  }),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        passwordRegex,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+      ),
+    confirmPassword: z.string().min(1, "Please confirm the password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export const taskSchema = z.object({
+  title: z.string().min(1, "Title is required").max(300, "Title too long"),
+  description: z.string().max(5000, "Description too long").optional().or(z.literal("")),
+  assignedTo: z.string().min(1, "Please assign this task to someone"),
+  dueDate: z.string().min(1, "Due date is required"),
+  priority: z.enum(["low", "medium", "high", "critical"] as const, {
+    message: "Please select a valid priority",
+  }),
+  status: z.enum(["todo", "in_progress", "blocked", "in_review", "done", "cancelled"] as const).optional().default("todo"),
+});
+
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type TaskInput = z.infer<typeof taskSchema>;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginAction } from "@/actions/auth";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,23 +20,35 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    const email = ((formData.get("email") as string) || "").trim().toLowerCase();
+    const password = (formData.get("password") as string) || "";
+
+    if (!email || !password) {
+      toast.error("Please enter email and password");
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      const result = await loginAction(formData);
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: "/dashboard",
+      });
 
-      if (result?.error) {
-        toast.error(result.error);
+      if (res?.error) {
+        toast.error("Invalid email or password");
         setIsLoading(false);
         return;
       }
 
       toast.success("Welcome back!");
-      router.push("/dashboard");
-      router.refresh();
-    } catch {
-      // Auth.js redirect — let it happen
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = res?.url || "/dashboard";
+    } catch (err: any) {
+      console.error("Login error:", err);
+      // Even if catch is hit on redirect, redirect to dashboard
+      window.location.href = "/dashboard";
     }
   }
 
